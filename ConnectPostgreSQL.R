@@ -24,27 +24,35 @@ connectDB <- function(inDriver, inDbName, inHost, inPort, inUser)
   #-- and C:\Users\<username>\AppData\Roaming\pgAdmin
   #-- corrected connection refused issues
   
+  cat("Attempting a new connection to the database: ", inDbName, "... ")
+  
   # Connect to PostgreSQL database
   con <- dbConnect(inDriver, inDbName,
                    host=inHost, port=inPort,
                    user=inUser,
                    password=.rs.askForPassword('Database Password:'))
 
+  # Check if connection was successful to the PostgreSQL database server
+  if(isPostgresqlIdCurrent(con) == TRUE)
+  {
+    cat("Connection to ", inDbName, " was Successful.")
+  }
+  
   return(con)
 }
 
 
 # Connect to PostgreSQL database on a localhost connection
 # (database name, database port, database username)
-connectPostgresLocalhost <- function(inDbName, inPort, inUser)
-{
-  database_driver <- connectDriver('PostgreSQL')
-  
-  database <- connectDB(database_driver, inDbName,
-                        'localhost', inPort,
-                        inUser)
-  return(database, database_driver)
-}
+#connectPostgresLocalhost <- function(inDbName, inPort, inUser)
+#{
+#  database_driver <- connectDriver('PostgreSQL')
+#  
+#  database <- connectDB(database_driver, inDbName,
+#                        'localhost', inPort,
+#                        inUser)
+#  return(database, database_driver)
+#}
 
 # Disconnect and unload PostgreSQL driver
 # (Database connection, PostgreSQL driver)
