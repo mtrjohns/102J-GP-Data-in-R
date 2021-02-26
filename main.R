@@ -1,22 +1,22 @@
-# -----------------------------------------------
+#------------------------------------------------------------------------------
 # Install and Load Packages (uncomment to install)
-#------------------------------------------------
+#------------------------------------------------------------------------------
 
 #install.packages('tidyverse')
 #install.packages('GetoptLong')
 library(tidyverse)
 
-# -----------------------------------------------
+#------------------------------------------------------------------------------
 # Load required source files
-#------------------------------------------------
+#------------------------------------------------------------------------------
 
 source("ConnectPostgreSQL.R")
 source("PostgreSQLHelper.R")
 source("GPData2015InputValidation.R")
 
-# -----------------------------------------------
+#------------------------------------------------------------------------------
 # Database connections and driver initialisation
-#------------------------------------------------
+#------------------------------------------------------------------------------
 
 # Load database driver (database_name)
 database_driver <- connectDriver('PostgreSQL')
@@ -27,9 +27,9 @@ db <- connectDB(database_driver,
                       'localhost', 5432,
                       'postgres')
 
-# -----------------------------------------------
+#------------------------------------------------------------------------------
 # 
-#------------------------------------------------
+#------------------------------------------------------------------------------
 print("Hello R")
 
 # List available tables from connected database
@@ -44,11 +44,11 @@ listTableStructure('qof_indicator')
 # output gp_data_up_to_2015 structure using Tidyverse
 #tidyTableStructure('gp_data_up_to_2015')
 
-practiceID <- readline(prompt="Enter Practice ID (W#####): ")
+#practiceID <- readline(prompt="Enter Practice ID (W#####): ")
 
-practiceIdValidation(practiceID)
+#practiceIdValidation(practiceID)
 
-
+userPracticeIDInput()
 
 
 
@@ -80,9 +80,9 @@ total_rows <- dbGetQuery(db, "select count(*) from public.gp_data_up_to_2015")
 
 
 
-# -----------------------------------------------
+#------------------------------------------------------------------------------
 # Disconnect database and driver
-#------------------------------------------------
+#------------------------------------------------------------------------------
 dbListConnections(database_driver)
 disconnect_Database(db, database_driver)
 dbListConnections(database_driver)

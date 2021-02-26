@@ -1,7 +1,7 @@
-# -----------------------------------------------
+#------------------------------------------------------------------------------
 # PostgreSQL Database Helper Script
 # author: Michael Johns
-#------------------------------------------------
+#------------------------------------------------------------------------------
 
 library(GetoptLong) #For 'qq()' which allows substitution of vars in strings
 
@@ -10,6 +10,7 @@ listTables <- function(dbConnection){
   print(dbListTables(dbConnection))
 }
 
+# Show table structure in console
 listTableStructure <- function(table){
   tableStructure <- dbGetQuery(db,
              qq('select column_name as name, ordinal_position as position,
@@ -24,6 +25,7 @@ listTableStructure <- function(table){
 
 }
 
+# Show table structure in TidyVerse View (database connection)
 tidyTableStructure <- function(table){
   tableStructure <- listTableStructure(table)
   View(tableStructure)
