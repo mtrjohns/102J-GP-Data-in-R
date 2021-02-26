@@ -9,16 +9,19 @@
 practiceIdValidation <- function(gpPracticeID){
   isValid <- FALSE
   
-  # Check input is as expected (character, 5 integers)
+  # Check input is as expected (Upper case character, 5 integers, W#####)
   if(grepl('^W[0-9]{5}$', gpPracticeID)){
     isValid <- TRUE
   }else{
-    cat("The GP Practice ID", gpPracticeID,
-        " is not valid, Please try again (example ID: W00001).")
+    cat("The GP Practice ID ", gpPracticeID,
+        " is not valid, Please try again (example ID: W00001).", sep='')
   }
-  if (!valid_id){
+  
+
+  if (!isValid){
     stop('\nHalting: the practice ID was not valid, no data will be found.')
   }
+  
   return(isValid)
 }
 

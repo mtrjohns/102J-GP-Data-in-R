@@ -39,14 +39,14 @@ listTables(db)
 listTableStructure('qof_indicator')
 
 # output qofIndicatorTable structure using Tidyverse
-test <- tidyTableStructure('qof_indicator')
+#test <- tidyTableStructure('qof_indicator')
 
 # output gp_data_up_to_2015 structure using Tidyverse
-tidyTableStructure('gp_data_up_to_2015')
+#tidyTableStructure('gp_data_up_to_2015')
 
+practiceID <- readline(prompt="Enter Practice ID (W#####): ")
 
-
-save <- practiceIdValidation(W012w4)
+practiceIdValidation(practiceID)
 
 
 
