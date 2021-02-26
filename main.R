@@ -4,6 +4,7 @@
 
 #install.packages('tidyverse')
 #install.packages('GetoptLong')
+#install.packages('RPostgreSQL')
 library(tidyverse)
 
 #------------------------------------------------------------------------------
@@ -15,7 +16,7 @@ source("PostgreSQLHelper.R")
 source("GPData2015InputValidation.R")
 
 #------------------------------------------------------------------------------
-# Database connections and driver initialisation
+# Database connections and PostgreSQL driver initialisation
 #------------------------------------------------------------------------------
 
 # Load database driver (database_name)
@@ -28,32 +29,33 @@ db <- connectDB(database_driver,
                       'postgres')
 
 #------------------------------------------------------------------------------
-# 
+# Table information and layout queries
 #------------------------------------------------------------------------------
-print("Hello R")
 
 # List available tables from connected database
 listTables(db)
 
 # output qof_indicator structure to console
+listTableStructure('address')
+listTableStructure('bnf')
+listTableStructure('chemsubstance')
+listTableStructure('gp_data_up_to_2015')
+listTableStructure('qof_achievement')
 listTableStructure('qof_indicator')
 
 # output qofIndicatorTable structure using Tidyverse
-#test <- tidyTableStructure('qof_indicator')
+test <- tidyTableStructure('qof_indicator')
 
 # output gp_data_up_to_2015 structure using Tidyverse
-#tidyTableStructure('gp_data_up_to_2015')
+tidyTableStructure('gp_data_up_to_2015')
 
-#practiceID <- readline(prompt="Enter Practice ID (W#####): ")
-
-#practiceIdValidation(practiceID)
+#------------------------------------------------------------------------------
+# User selects Practice ID
+#------------------------------------------------------------------------------
 
 userPracticeIDInput()
 
 
-
-# Check all tables in the database
-dbListTables(db)
 
 # check columns of address table
 dbGetQuery(db, "

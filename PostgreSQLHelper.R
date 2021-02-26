@@ -2,6 +2,7 @@
 # PostgreSQL Database Helper Script
 # author: Michael Johns
 #------------------------------------------------------------------------------
+#install.packages('GetoptLong')
 
 library(GetoptLong) #For 'qq()' which allows substitution of vars in strings
 
@@ -21,8 +22,8 @@ listTableStructure <- function(table){
             table_name = \'@{table}\';'))
   
   cat(table, 'table, is structured as follows:\n', sep=' ')
-  return(tableStructure)
 
+  return(tableStructure)
 }
 
 # Show table structure in TidyVerse View (database connection)
