@@ -3,6 +3,7 @@
 #------------------------------------------------
 
 #install.packages('tidyverse')
+#install.packages('GetoptLong')
 library(tidyverse)
 
 # -----------------------------------------------
@@ -10,7 +11,9 @@ library(tidyverse)
 #------------------------------------------------
 
 source("ConnectPostgreSQL.R")
-  
+source("PostgreSQLHelper.R")
+source("GPData2015InputValidation.R")
+
 # -----------------------------------------------
 # Database connections and driver initialisation
 #------------------------------------------------
@@ -28,6 +31,25 @@ db <- connectDB(database_driver,
 # 
 #------------------------------------------------
 print("Hello R")
+
+# List available tables from connected database
+listTables(db)
+
+# output qof_indicator structure to console
+listTableStructure('qof_indicator')
+
+# output qofIndicatorTable structure using Tidyverse
+test <- tidyTableStructure('qof_indicator')
+
+# output gp_data_up_to_2015 structure using Tidyverse
+tidyTableStructure('gp_data_up_to_2015')
+
+
+
+save <- practiceIdValidation(W012w4)
+
+
+
 
 
 # Check all tables in the database

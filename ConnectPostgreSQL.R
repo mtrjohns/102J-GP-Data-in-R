@@ -1,5 +1,5 @@
 # -----------------------------------------------
-# PostgreSQL Database Connection Wrapper Class
+# PostgreSQL Database Connection Wrapper Script
 # author: Michael Johns
 #------------------------------------------------
 
