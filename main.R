@@ -10,10 +10,11 @@ library(tidyverse)
 #------------------------------------------------------------------------------
 # Load required source files
 #------------------------------------------------------------------------------
-
+install.packages("gt")
+library(gt)             # For demonstration in table 
 source("ConnectPostgreSQL.R")
 source("PostgreSQLHelper.R")
-source("GPData2015InputValidation.R")
+source("GPData2015Helper.R")
 
 #------------------------------------------------------------------------------
 # Database connections and PostgreSQL driver initialisation
@@ -33,18 +34,20 @@ db <- connectDB(database_driver,
 #------------------------------------------------------------------------------
 
 # List available tables from connected database
-listTables(db)
+gpTables(db)
+# List available tables in Tidyverse View
+gpTablesTidy(db)
 
-# output qof_indicator structure to console
-listTableStructure('address')
-listTableStructure('bnf')
-listTableStructure('chemsubstance')
-listTableStructure('gp_data_up_to_2015')
-listTableStructure('qof_achievement')
-listTableStructure('qof_indicator')
+# output all gp practice database table structures to console
+gpAllTablesStructure(db)
 
-# output qofIndicatorTable structure using Tidyverse
-test <- tidyTableStructure('qof_indicator')
+# output qof_indicator Table structure using Tidyverse
+gpAddressTableTidy(db)
+gpBnfTableTidy(db)
+gpChemSubstanceTableTidy(db)
+gpGpDataUpTo2015TableTidy(db)
+gpQofAchievementTableTidy(db)
+gpQofIndicatorTableTidy(db)
 
 # output gp_data_up_to_2015 structure using Tidyverse
 tidyTableStructure('gp_data_up_to_2015')
@@ -52,8 +55,22 @@ tidyTableStructure('gp_data_up_to_2015')
 #------------------------------------------------------------------------------
 # User selects Practice ID
 #------------------------------------------------------------------------------
+qof_indicator <- dbGetQuery(db, '
+    select column_name as name, ordinal_position as position,
+           data_type as type, character_maximum_length as length,
+           numeric_precision as precision
+    from information_schema.columns
+    where table_schema = \'public\' and
+          table_name = \'qof_indicator\';')
 
-userPracticeIDInput()
+user_practice_id <- userPracticeIDInput()
+
+
+
+
+
+
+
 
 
 
@@ -78,7 +95,6 @@ View(surgery)
 surgery <- sort(surgery$practiceid)
 
 total_rows <- dbGetQuery(db, "select count(*) from public.gp_data_up_to_2015")
-
 
 
 
