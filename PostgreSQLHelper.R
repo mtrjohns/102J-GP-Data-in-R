@@ -31,3 +31,11 @@ tidyTableStructure <- function(table){
   DatabaseTableStructure <- listTableStructure(table)
   View(DatabaseTableStructure)
 }
+
+# Complete qof_achievement table for a single practice
+# Inputs: (Database connection, Practice ID(e.g. W#####))
+#getPracticeTable <- function(db, practiceID, table){
+#  dbGetQuery(db,qq(
+#    'select * from \'@{table}\'
+#    where orgcode like \'@{practiceID}\';'))
+#}

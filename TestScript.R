@@ -1,4 +1,9 @@
 #------------------------------------------------------------------------------
+# Standalone Test script, mainly used to interrogate the data
+# during development
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 # Install and Load Library Packages (uncomment to install)
 #------------------------------------------------------------------------------
 
@@ -27,9 +32,38 @@ database_driver <- connectDriver('PostgreSQL')
 
 # Connect to DB (Driver, name, host address, port, database username)
 db <- connectDB(database_driver,
-                      'gp_practice_data',
-                      'localhost', 5432,
-                      'postgres')
+                'gp_practice_data',
+                'localhost', 5432,
+                'postgres')
+
+#------------------------------------------------------------------------------
+# Database tables information and layout queries
+# testing and data interrogation
+#------------------------------------------------------------------------------
+
+# List available tables from connected database
+gpTablesConsole(db)
+# List available tables in Tidyverse View
+gpTablesTidy(db)
+
+# Output table structures into Console
+address <- gpAddressTableStructureConsole(db)
+bnf <- gpBnfTableStructureConsole(db)
+chem_substance <- gpChemSubstanceTableStructureConsole(db)
+gp_data_up_to_2015 <- gpGpDataUpTo2015TableStructureConsole(db)
+qof_achievement <- gpQofAchievementTableStructureConsole(db)
+qof_indicator <- gpQofIndicatorTableStructureConsole(db)
+
+# output table structures using Tidyverse
+address <- gpAddressTableTidy(db)
+bnf <- gpBnfTableTidy(db)
+chem_substance <- gpChemSubstanceTableTidy(db)
+gp_data_up_to_2015 <- gpGpDataUpTo2015TableTidy(db)
+qof_achievement <- gpQofAchievementTableTidy(db)
+qof_indicator <- gpQofIndicatorTableTidy(db)
+
+# output gp_data_up_to_2015 structure using Tidyverse
+tidyTableStructure('gp_data_up_to_2015')
 
 #------------------------------------------------------------------------------
 # User selects Practice ID
@@ -52,34 +86,6 @@ View(testQofAchievement)
 # when CAN001 is used, as CAN001 is present in all practice
 W00005PatientTotal <- GetPracticeAmountOfPatients(db, 'W00005')
 print(W00005PatientTotal)
-
-
-
-
-
-
-# check columns of address table
-dbGetQuery(db, "
-           select column_name, 
-	         ordinal_position,
-           data_type,
-           character_maximum_length,
-           numeric_precision
-           from INFORMATION_SCHEMA.COLUMNS
-           where table_schema = 'public'
-           and table_name = 'address';")
-
-# Query a dataset ####
-surgery <- dbGetQuery(db, "select distinct a.practiceid 
-                      from address a
-                      join gp_data_up_to_2015 b
-                      on a.practiceid = b.practiceid;")
-View(surgery)
-
-surgery <- sort(surgery$practiceid)
-
-total_rows <- dbGetQuery(db, "select count(*) from public.gp_data_up_to_2015")
-
 
 
 #------------------------------------------------------------------------------

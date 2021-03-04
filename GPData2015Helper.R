@@ -48,7 +48,7 @@ userPracticeIDInput <- function(){
 }
 
 #------------------------------------------------------------------------------
-# List GP available tables and individual tables
+# List GP available tables and individual table structures
 # Console and Tidyverse Functions
 #------------------------------------------------------------------------------
 
@@ -158,13 +158,47 @@ gpQofIndicatorTableTidy <- function(db){
   return(qof_indicator)
 }
 
+
 #------------------------------------------------------------------------------
+# Get database tables with their data for interrogation
+# Warning: large tables can be slow to retrieve
+#------------------------------------------------------------------------------
+
+# Complete qof_achievement table for a single practice
+# Inputs: (Database connection, Practice ID(e.g. W#####))
+#getQofAchievement <- function(db, practiceID){
+#  qof_achievementPractice <- getPracticeTable(db, practiceID, 'qof_achievement')
+#  return(qof_achievementPractice)
+#  }
+#------------------------------------------------------------------------------
+# Cancer Database get functions
+#------------------------------------------------------------------------------
+
+# Total number of patients in practice
+# using CAN001 automatically to ignore subsets of patients
+# Inputs: (Database connection, Practice ID(e.g. W#####))
+GetPracticeAmountOfPatients <- function(db, practiceID){
+  totalPatients <- dbGetQuery(db,qq(
+    'select field4
+    from qof_achievement
+    where indicator like \'CAN001\' and
+    orgcode like \'@{practiceID}\';'))
+    
+    return(as.integer(totalPatients))
+}
+
 # Get Indicator from qof_achievement table
-# Inputs: (Database Connection, Indicator type (e.g: CAN001))
-#------------------------------------------------------------------------------
-getQofIndicator <- function(db, indicator){
+# Inputs: (Database Connection, Indicator type (e.g. CAN001))
+getQofAchievementIndicator <- function(db, indicator){
   dbGetQuery(db,qq(
     'select * from qof_achievement
     where indicator like \'@{indicator}\';'))
 }
 
+getAchieveIndiAndPractice <- function(db, indicator,practiceID){
+    dbGetQuery(db,qq(
+      'select * from qof_achievement
+      where indicator like \'@{indicator}\'
+      and orgcode like \'@{practiceID}\';'
+      ))
+}
