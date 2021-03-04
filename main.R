@@ -1,17 +1,19 @@
 #------------------------------------------------------------------------------
-# Install and Load Packages (uncomment to install)
+# Install and Load Library Packages (uncomment to install)
 #------------------------------------------------------------------------------
 
 #install.packages('tidyverse')
 #install.packages('GetoptLong')
 #install.packages('RPostgreSQL')
+#install.packages("gt")
 library(tidyverse)
+library(GetoptLong)
+library(RPostgreSQL)
+library(gt)
 
 #------------------------------------------------------------------------------
 # Load required source files
 #------------------------------------------------------------------------------
-install.packages("gt")
-library(gt)             # For demonstration in table 
 source("ConnectPostgreSQL.R")
 source("PostgreSQLHelper.R")
 source("GPData2015Helper.R")
@@ -30,24 +32,29 @@ db <- connectDB(database_driver,
                       'postgres')
 
 #------------------------------------------------------------------------------
-# Table information and layout queries
+# Database tables information and layout queries
 #------------------------------------------------------------------------------
 
 # List available tables from connected database
-gpTables(db)
+gpTablesConsole(db)
 # List available tables in Tidyverse View
 gpTablesTidy(db)
 
-# output all gp practice database table structures to console
-gpAllTablesStructure(db)
+# Output table structures into Console
+gpAddressTableStructureConsole(db)
+gpBnfTableStructureConsole(db)
+gpChemSubstanceTableStructureConsole(db)
+gpGpDataUpTo2015TableStructureConsole(db)
+gpQofAchievementTableStructureConsole(db)
+gpQofIndicatorTableStructureConsole(db)
 
-# output qof_indicator Table structure using Tidyverse
-gpAddressTableTidy(db)
-gpBnfTableTidy(db)
-gpChemSubstanceTableTidy(db)
-gpGpDataUpTo2015TableTidy(db)
-gpQofAchievementTableTidy(db)
-gpQofIndicatorTableTidy(db)
+# output table structures using Tidyverse
+address <- gpAddressTableTidy(db)
+bnf <- gpBnfTableTidy(db)
+chem_substance <- gpChemSubstanceTableTidy(db)
+gp_data_up_to_2015 <- gpGpDataUpTo2015TableTidy(db)
+qof_achievement <- gpQofAchievementTableTidy(db)
+qof_indicator <- gpQofIndicatorTableTidy(db)
 
 # output gp_data_up_to_2015 structure using Tidyverse
 tidyTableStructure('gp_data_up_to_2015')
@@ -63,11 +70,32 @@ qof_indicator <- dbGetQuery(db, '
     where table_schema = \'public\' and
           table_name = \'qof_indicator\';')
 
-user_practice_id <- userPracticeIDInput()
+practice_id <- userPracticeIDInput()
 
 
 
+#What five drugs does the practice spend the most money on?
+# drugs list for the specified practice.
+drugs <- dbGetQuery(db, qq('
+    select * from gp_data_up_to_2015
+    where practiceid = \'@{user_practice_id}\''))
 
+
+Top_5_spendings <- drugs %>% 
+  distinct() %>% #removes duplicates
+  filter(str_detect(bnfname, 'Tab')==TRUE) %>% #detects if string contains space
+  group_by(bnfname) %>% 
+  summarise(sum_actcost=sum(actcost)) %>% # calculating the mean of cost for drugs for the selected practice.
+  arrange(desc(sum_actcost)) %>% head(5) #selecting 5 elements this number can be changed to 10 for top 10 spendings on drugs.
+#descending for Top 5 , for 5 least expensive ascending arranging would be rquired 
+cat('\nThe top 5 drugs in terms of spendings for practice, ', user_practice_id,
+    ', were:\n', sep='')
+Top_5_spendings %>% gt() %>%
+  tab_header(title = md("Top 5 drugs in terms of spendings for GP Practice")) %>%
+  cols_label(
+    bnfname = "Name",
+    sum_actcost = "Total Money Spent"
+  )
 
 
 

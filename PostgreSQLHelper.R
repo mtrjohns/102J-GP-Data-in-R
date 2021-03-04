@@ -13,7 +13,7 @@ listTables <- function(dbConnection){
 
 # Show table structure in console
 listTableStructure <- function(table){
-  tableStructure <- dbGetQuery(db,
+  DatabaseTableStructure <- dbGetQuery(db,
              qq('select column_name as name, ordinal_position as position,
             data_type as type, character_maximum_length as length,
             numeric_precision as precision
@@ -23,11 +23,11 @@ listTableStructure <- function(table){
   
   cat(table, 'table, is structured as follows:\n', sep=' ')
 
-  return(tableStructure)
+  return(DatabaseTableStructure)
 }
 
 # Show table structure in TidyVerse View (database connection)
 tidyTableStructure <- function(table){
-  tableStructure <- listTableStructure(table)
-  View(tableStructure)
+  DatabaseTableStructure <- listTableStructure(table)
+  View(DatabaseTableStructure)
 }

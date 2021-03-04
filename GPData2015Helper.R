@@ -58,63 +58,112 @@ gpTablesConsole <- function(db){
 }
 # list gp practice columns in Tidyverse
 gpTablesTidy <- function(dbConnection){
-  tidyTableStructure(dbListTables(dbConnection))
-}
-
-# output bnf Table Structure
-gpBnfTableStructureConsole <- function(db){
-  listTableStructure('bnf')
-}
-# output bnf Table structure using Tidyverse
-gpBnfTableTidy <- function(db){
-  tidyTableStructure('bnf')
+  databaseColumns <- listTables(db)
+  View(databaseColumns)
 }
 
 # output address Table Structure
+# inputs: (database connection)
 gpAddressTableStructureConsole <- function(db){
-  listTableStructure('address')
+  address <- listTableStructure('address')
+  
+  return(address)
 }
 # output address Table structure using Tidyverse
+# inputs: (database connection)
 gpAddressTableTidy <- function(db){
-  tidyTableStructure('address')
+  address <- gpAddressTableStructureConsole(db)
+  View(address)
+  
+  return(address)
+}
+
+# output bnf Table Structure
+# inputs: (database connection)
+gpBnfTableStructureConsole <- function(db){
+  bnf <- listTableStructure('bnf')
+  
+  return(bnf)
+}
+# output bnf Table structure using Tidyverse
+# inputs: (database connection)
+gpBnfTableTidy <- function(db){
+  bnf <- gpBnfTableStructureConsole(db)
+  View(bnf)
+  
+  return(bnf)
 }
 
 # output chemsubstance Table Structure
+# inputs: (database connection)
 gpChemSubstanceTableStructureConsole <- function(db){
-  listTableStructure('chemsubstance')
+  chemsubstance <- listTableStructure('chemsubstance')
+  
+  return(chemsubstance)
 }
 # output chemsubstance Table structure using Tidyverse
+# inputs: (database connection)
 gpChemSubstanceTableTidy <- function(db){
-  tidyTableStructure('chemsubstance')
+  chemsubstance <- gpChemSubstanceTableStructureConsole(db)
+  View(chemsubstance)
+  
+  return(chemsubstance)
 }
 
 # output gp_data_up_to_2015 Table Structure
+# inputs: (database connection)
 gpGpDataUpTo2015TableStructureConsole <- function(db){
-  listTableStructure('gp_data_up_to_2015')
+  gp_data_up_to_2015 <- listTableStructure('gp_data_up_to_2015')
+  
+  return(gp_data_up_to_2015)
 }
 # output gp_data_up_to_2015 Table structure using Tidyverse
+# inputs: (database connection)
 gpGpDataUpTo2015TableTidy <- function(db){
-  tidyTableStructure('gp_data_up_to_2015')
+  gp_data_up_to_2015 <- gpGpDataUpTo2015TableStructureConsole(db)
+  View(gp_data_up_to_2015)
+  
+  return(gp_data_up_to_2015)
 }
 
 # output qof_achievement Table Structure
+# inputs: (database connection)
 gpQofAchievementTableStructureConsole <- function(db){
-  listTableStructure('qof_achievement')
+  qof_achievement <- listTableStructure('qof_achievement')
+  
+  return(qof_achievement)
 }
 # output qof_achievement Table structure using Tidyverse
+# inputs: (database connection)
 gpQofAchievementTableTidy <- function(db){
-  tidyTableStructure('qof_achievement')
+  qof_achievement <- gpQofAchievementTableStructureConsole(db)
+  View(qof_achievement)
+  
+  return(qof_achievement)
 }
 
 # output qof_indicator Table Structure
+# inputs: (database connection)
 gpQofIndicatorTableStructureConsole <- function(db){
-  listTableStructure('qof_indicator')
+  qof_indicator <- listTableStructure('qof_indicator')
+  
+  return(qof_indicator)
 }
 # output qof_indicator Table structure using Tidyverse
+# inputs: (database connection)
 gpQofIndicatorTableTidy <- function(db){
-  tidyTableStructure('qof_indicator')
+  qof_indicator <- gpQofIndicatorTableStructureConsole(db)
+  View(qof_indicator)
+  
+  return(qof_indicator)
 }
 
 #------------------------------------------------------------------------------
-# 
+# Get Indicator
+#------------------------------------------------------------------------------
+#getQofIndicator <- function(db, indicator){
+#  dbGetQuery(db,qq(
+#    select * from qof_achievement
+#    where indicator like \'@{indicator}\';'))
+#}
 
