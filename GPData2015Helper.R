@@ -159,11 +159,12 @@ gpQofIndicatorTableTidy <- function(db){
 }
 
 #------------------------------------------------------------------------------
-# Get Indicator
+# Get Indicator from qof_achievement table
+# Inputs: (Database Connection, Indicator type (e.g: CAN001))
 #------------------------------------------------------------------------------
-#getQofIndicator <- function(db, indicator){
-#  dbGetQuery(db,qq(
-#    select * from qof_achievement
-#    where indicator like \'@{indicator}\';'))
-#}
+getQofIndicator <- function(db, indicator){
+  dbGetQuery(db,qq(
+    'select * from qof_achievement
+    where indicator like \'@{indicator}\';'))
+}
 
