@@ -5,6 +5,7 @@
 #
 # about: This script allows the user to enter a GP Practice ID to console
 #        and validates data matches the expected format (W#####)
+#       Among varying functions that work with the gp_data_practice database
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 # User Input GP Selection and Validation
@@ -65,7 +66,7 @@ gpTablesTidy <- function(dbConnection){
 # output address Table Structure
 # inputs: (database connection)
 gpAddressTableStructureConsole <- function(db){
-  address <- listTableStructure('address')
+  address <- listTableStructure(db, 'address')
   
   return(address)
 }
@@ -81,7 +82,7 @@ gpAddressTableTidy <- function(db){
 # output bnf Table Structure
 # inputs: (database connection)
 gpBnfTableStructureConsole <- function(db){
-  bnf <- listTableStructure('bnf')
+  bnf <- listTableStructure(db, 'bnf')
   
   return(bnf)
 }
@@ -97,7 +98,7 @@ gpBnfTableTidy <- function(db){
 # output chemsubstance Table Structure
 # inputs: (database connection)
 gpChemSubstanceTableStructureConsole <- function(db){
-  chemsubstance <- listTableStructure('chemsubstance')
+  chemsubstance <- listTableStructure(db, 'chemsubstance')
   
   return(chemsubstance)
 }
@@ -113,7 +114,7 @@ gpChemSubstanceTableTidy <- function(db){
 # output gp_data_up_to_2015 Table Structure
 # inputs: (database connection)
 gpGpDataUpTo2015TableStructureConsole <- function(db){
-  gp_data_up_to_2015 <- listTableStructure('gp_data_up_to_2015')
+  gp_data_up_to_2015 <- listTableStructure(db, 'gp_data_up_to_2015')
   
   return(gp_data_up_to_2015)
 }
@@ -129,7 +130,7 @@ gpGpDataUpTo2015TableTidy <- function(db){
 # output qof_achievement Table Structure
 # inputs: (database connection)
 gpQofAchievementTableStructureConsole <- function(db){
-  qof_achievement <- listTableStructure('qof_achievement')
+  qof_achievement <- listTableStructure(db, 'qof_achievement')
   
   return(qof_achievement)
 }
@@ -145,7 +146,7 @@ gpQofAchievementTableTidy <- function(db){
 # output qof_indicator Table Structure
 # inputs: (database connection)
 gpQofIndicatorTableStructureConsole <- function(db){
-  qof_indicator <- listTableStructure('qof_indicator')
+  qof_indicator <- listTableStructure(db, 'qof_indicator')
   
   return(qof_indicator)
 }
@@ -161,19 +162,65 @@ gpQofIndicatorTableTidy <- function(db){
 
 #------------------------------------------------------------------------------
 # Get database tables with their data for interrogation
-# Warning: large tables can be slow to retrieve
+# Warning: large tables can be slow to retrieve with high limit values set
 #------------------------------------------------------------------------------
+# Get and display GP Address Table
+# Inputs: (Database connection, Row limit)
+#--  Warning: large tables can be slow to retrieve with high limit values set
+getGPAddressTable <- function(db, limit){
+  QofAddressTable <- getTable(db, 'address', limit)
+  View(QofAddressTable)
+  return(QofAddressTable)
+}
 
-# Complete qof_achievement table for a single practice
-# Inputs: (Database connection, Practice ID(e.g. W#####))
-#getQofAchievement <- function(db, practiceID){
-#  qof_achievementPractice <- getPracticeTable(db, practiceID, 'qof_achievement')
-#  return(qof_achievementPractice)
-#  }
+# Get and display GP bnf Table
+# Inputs: (Database connection, Row limit)
+#--  Warning: large tables can be slow to retrieve with high limit values set
+getGPBnfTable <- function(db, limit){
+  BnfTable <- getTable(db, 'bnf', limit)
+  View(BnfTable)
+  return(BnfTable)
+}
+
+# Get and display GP chemsubstance Table
+# Inputs: (Database connection, Row limit)
+#--  Warning: large tables can be slow to retrieve with high limit values set
+getGPChemSubstanceTable <- function(db, limit){
+  ChemSubstanceTable <- getTable(db, 'chemsubstance', limit)
+  View(ChemSubstanceTable)
+  return(ChemSubstanceTable)
+}
+
+# Get and display gp_up_to_2015 Table
+# Inputs: (Database connection, Row limit)
+#--  Warning: large tables can be slow to retrieve with high limit values set
+getGPDataUpTo2015Table <- function(db, limit){
+  GPDataUpTo2015Table <- getTable(db, 'gp_data_up_to_2015', limit)
+  View(GPDataUpTo2015Table)
+  return(GPDataUpTo2015Table)
+}
+
+# Get and display GP qof_achievements Table
+# Inputs: (Database connection, Row limit)
+#--  Warning: large tables can be slow to retrieve with high limit values set
+getQofAchievementTable <- function(db, limit){
+  QofAchievementTable <- getTable(db, 'qof_achievement', limit)
+  View(QofAchievementTable)
+  return(QofAchievementTable)
+}
+
+# Get and display GP qof_indicators Table
+# Inputs: (Database connection, Row limit)
+#--  Warning: large tables can be slow to retrieve with high limit values set
+getQofIndicatorTable <- function(db, table, limit){
+  QofIndicatorTable <- getTable(db, table, limit)
+  View(QofIndicatorTable)
+  return(QofIndicatorTable)
+}
+
 #------------------------------------------------------------------------------
 # Cancer Database get functions
 #------------------------------------------------------------------------------
-
 # Total number of patients in practice
 # using CAN001 automatically to ignore subsets of patients
 # Inputs: (Database connection, Practice ID(e.g. W#####))
@@ -201,4 +248,13 @@ getAchieveIndiAndPractice <- function(db, indicator,practiceID){
       where indicator like \'@{indicator}\'
       and orgcode like \'@{practiceID}\';'
       ))
+}
+
+# Complete table for a single practice
+# Inputs: (Database connection, table name, Practice ID(e.g. W#####))
+getPracticeTable <- function(db, table, practiceID){
+  dbGetQuery(db,qq(
+    'select *
+    from @{table}
+    where orgcode like \'@{practiceID}\';'))
 }

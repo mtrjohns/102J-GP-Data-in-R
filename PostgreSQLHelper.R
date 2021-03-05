@@ -12,7 +12,7 @@ listTables <- function(dbConnection){
 }
 
 # Show table structure in console
-listTableStructure <- function(table){
+listTableStructure <- function(db, table){
   DatabaseTableStructure <- dbGetQuery(db,
              qq('select column_name as name, ordinal_position as position,
             data_type as type, character_maximum_length as length,
@@ -27,15 +27,25 @@ listTableStructure <- function(table){
 }
 
 # Show table structure in TidyVerse View (database connection)
-tidyTableStructure <- function(table){
-  DatabaseTableStructure <- listTableStructure(table)
+tidyTableStructure <- function(db, table){
+  DatabaseTableStructure <- listTableStructure(db, table)
   View(DatabaseTableStructure)
 }
 
-# Complete qof_achievement table for a single practice
-# Inputs: (Database connection, Practice ID(e.g. W#####))
-#getPracticeTable <- function(db, practiceID, table){
-#  dbGetQuery(db,qq(
-#    'select * from \'@{table}\'
-#    where orgcode like \'@{practiceID}\';'))
-#}
+# get table from the postgreSQL database and output in Tidyverse View
+# Inputs: (Database connection, Table name, Row limit)
+#-- Warning: Can take a long time with a large table and high limit value
+getTable <- function(db, table, limit)
+  dbGetQuery(db,qq(
+    'select *
+    from @{table}
+    limit @{limit};'))
+
+# get table from the postgreSQL database
+# Inputs: (Database connection, Table name, Row limit)
+#-- Warning: Can take a long time with a large table and high limit value
+getTidyTable <- function(db, table, limit){
+  table <- getTable(db, table, limit)
+  View(table)
+  return(table)
+}
