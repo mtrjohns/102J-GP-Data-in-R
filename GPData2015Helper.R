@@ -38,7 +38,7 @@ userPracticeIDInput <- function(){
   isValid <- practiceIdValidation(practiceID)
   
   if(isValid){
-    cat("The GP Practice Id has been set to: ")
+    cat("The GP Practice Id has been set to: ", practiceID)
     return(practiceID)
   }
   else
@@ -232,16 +232,47 @@ getGPQofIndicatorTable <- function(db, limit){
 # Inputs: (Database connection, Practice ID(e.g. W#####))
 # Outputs: single practice total amount of registered patients
 # note: CAN001 is used, as CAN001 is present in every practice
-GetPracticeAmountOfPatients <- function(db, practiceID){
+getPracticeAmountOfPatients <- function(db, practiceID){
   totalPatients <- dbGetQuery(db,qq(
     'select field4
     from qof_achievement
     where indicator like \'CAN001\' and
     orgcode like \'@{practiceID}\';'))
     
-    return(as.integer(totalPatients))
+    return(as.numeric(totalPatients))
 }
 
+# get table single column
+getColumn <- function(db, table, column){
+  column <- dbGetQuery(db, qq(
+    'select @{column}
+    from  @{table};'
+  ))
+  return(column)
+}
+
+# get qof_indicator field from specific practice
+getGPQofAchievementField <- function(db, practiceID, indicator, column){
+  QofAchievementField <- dbGetQuery(db, qq(
+    'select @{column}
+    from  qof_achievement
+    where indicator like \'@{indicator}\' and
+    orgcode like \'@{practiceID}\';'))
+  
+    return(as.numeric(QofAchievementField))
+}
+
+getPracticePercentageOfPatientsWithCancer <- function(db, practiceID){
+  PercentageOfPatientsWithCancer <- getGPQofAchievementField(db, practiceID, 
+                                                      'CAN001', 'ratio')
+  
+  cat('The percentage of patients Diagnosed with cancer at this practiceID:', 
+      practiceID, 'is:', round(PracticeCancerPercentageTest, 2), '%')
+  
+  return(PercentageOfPatientsWithCancer)
+}
+  
+  
 # Get Indicator from qof_achievement table
 # Inputs: (Database Connection, Indicator type (e.g. CAN001))
 # Outputs: Raw qof_achievement table, filtered by indicator
@@ -307,12 +338,16 @@ getQofAchievementIndicatorAndPractice <- function(db, indicator,practiceID){
   return(achievementIndicatorAndPractice)
 }
 
+# Get a single practice records from gp_data_up_to_2015 table
+# Inputs: (Database Connection, Practice ID)
+# Outputs: Practice Full Table
 getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
-  dbGetQuery(db, qq(
+  GPData2015 <- dbGetQuery(db, qq(
     'select * from gp_data_up_to_2015
     where practiceid like \'@{practiceID}\';'
   ))
-} 
+  return(GPData2015)
+}
 
 # Get top 5 drugs prescribed by a single practice (transformed)
 # Inputs: (Database Connection, practiceID)
@@ -320,7 +355,8 @@ getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
 getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
   
   topFivePrescribedDrugs <- dbGetQuery(db, qq(
-    'select practiceid, bnfcode, bnfname, items, actcost from gp_data_up_to_2015
+    'select practiceid, bnfcode, bnfname, items, actcost
+    from gp_data_up_to_2015
     where practiceid like \'@{practiceID}\';')) %>%
 
     # rename columns to a more user friendly output
@@ -331,7 +367,9 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
     group_by(drugcode) %>%
     
     # sum prescription quantity
-    summarise(practiceid, drugcode, drugname, prescriptiontotal=sum(prescriptionquantity), costperprescription) %>%
+    summarise(practiceid, drugcode, drugname, 
+              prescriptiontotal=sum(prescriptionquantity), 
+              costperprescription) %>%
     
     # only get unique rows by drugcode
     distinct(drugcode, .keep_all = TRUE) %>%

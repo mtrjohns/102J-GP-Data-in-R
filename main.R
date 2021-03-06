@@ -35,23 +35,18 @@ db <- connectDB(database_driver,
 # User selects Practice ID
 #------------------------------------------------------------------------------
 
-practice_id <- userPracticeIDInput()
-practice_id = 'W00005'
+practiceID <- userPracticeIDInput()
+# Get top 5 prescribed drugs for a specific practice
+topFivePrescribedDrugsTest <- getTopFiveDrugSpendSinglePractice(db, practiceID)
+View(topFivePrescribedDrugsTest)
 
-# Get all CAN001 indicators from qof_achievement table
-qofAchievementCAN001 <- getQofAchievementIndicator(db, 'CAN001')
-View(qofAchievementCAN001)
+# get percentage of patients in a single practice that have cancer
+PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db, 
+                                                            practiceID)
 
 
-getQofAchievement(db, practice_id)
-testQofAchievement <- getQofAchievement(db, 'W00005')
-View(testQofAchievement)
 
-#check total amount of patients in a practice
-# field4 is total amount of patients in a single practice
-# when CAN001 is used, as CAN001 is present in all practice
-W00005PatientTotal <- GetPracticeAmountOfPatients(db, 'W00005')
-print(W00005PatientTotal)
+
 
 
 
@@ -59,26 +54,26 @@ print(W00005PatientTotal)
 
 
 # check columns of address table
-dbGetQuery(db, "
-           select column_name, 
-	         ordinal_position,
-           data_type,
-           character_maximum_length,
-           numeric_precision
-           from INFORMATION_SCHEMA.COLUMNS
-           where table_schema = 'public'
-           and table_name = 'address';")
+#dbGetQuery(db, "
+#           select column_name, 
+#	         ordinal_position,
+#           data_type,
+#           character_maximum_length,
+#           numeric_precision
+#           from INFORMATION_SCHEMA.COLUMNS
+#           where table_schema = 'public'
+#           and table_name = 'address';")
 
-# Query a dataset ####
-surgery <- dbGetQuery(db, "select distinct a.practiceid 
-                      from address a
-                      join gp_data_up_to_2015 b
-                      on a.practiceid = b.practiceid;")
-View(surgery)
+#Query a dataset ####
+#surgery <- dbGetQuery(db, "select distinct a.practiceid 
+#                      from address a
+#                      join gp_data_up_to_2015 b
+#                      on a.practiceid = b.practiceid;")
+#View(surgery)
 
-surgery <- sort(surgery$practiceid)
+#surgery <- sort(surgery$practiceid)
 
-total_rows <- dbGetQuery(db, "select count(*) from public.gp_data_up_to_2015")
+#total_rows <- dbGetQuery(db, "select count(*) from public.gp_data_up_to_2015")
 
 
 
