@@ -259,17 +259,32 @@ getGPQofAchievementField <- function(db, practiceID, indicator, column){
     where indicator like \'@{indicator}\' and
     orgcode like \'@{practiceID}\';'))
   
-    return(as.numeric(QofAchievementField))
+    return(QofAchievementField)
+}
+
+# get qof_indicator field from specific practice as a numeric return type
+getGPQofAchievementFieldAsNumeric <- function(db, practiceID, indicator, column)
+  {
+  QofAchievementFieldAsNumeric <- getGPQofAchievementField(db,
+                                                          practiceID,
+                                                          indicator,
+                                                          column)
+  
+  return(as.numeric(QofAchievementFieldAsNumeric))
 }
 
 getPracticePercentageOfPatientsWithCancer <- function(db, practiceID){
   PercentageOfPatientsWithCancer <- getGPQofAchievementField(db, practiceID, 
                                                       'CAN001', 'ratio')
-  
-  cat('The percentage of patients Diagnosed with cancer at this practiceID:', 
-      practiceID, 'is:', round(PracticeCancerPercentageTest, 2), '%')
-  
+
   return(PercentageOfPatientsWithCancer)
+}
+
+getPercentageOfPatientsWithCancerInWales <- function(db){
+  PercentageOfPatientsWithCancerInWales <- getGPQofAchievementField(db, 'WAL', 
+                                                             'CAN001', 'ratio')
+
+  return(PercentageOfPatientsWithCancerInWales)
 }
   
   

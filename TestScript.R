@@ -75,7 +75,7 @@ tidyTableStructure(db, 'gp_data_up_to_2015')
 practiceID <- userPracticeIDInput()
 
 # manually entered practice ID for testing
-practiceID = 'W98044'
+practiceID = 'W00007'
 
 # Get all CAN001 indicators from qof_achievement table
 qofAchievementCAN001 <- getQofAchievementIndicator(db, 'CAN001')
@@ -90,7 +90,7 @@ View(qofAchievementCAN001)
 qofAchievementW00005 <- getGPQofAchievementTable(db, practiceID, 10)
 
 # Get complete table from a PostGreSQL database with set limit on rows
-gettabletest <- getTable(db, 'address', 100)
+gettabletest <- getTable(db, 'address', 10)
 View(gettabletest)
 
 #check for any NA values in each column (can just pipe summary)
@@ -99,13 +99,25 @@ summary(gettabletest)
 getColumn(db, 'gp_data_up_to_2015', 'hb') %>% distinct %>% summary()
 Locality
 print(Locality)
+
 # get specific table from gp_practice_data database, with limit on rows returned
 getSummaryTableTest <- getGPDataUpTo2015Table(db, 100) %>% summary()
 getSummaryTableTest
 
-# get a single field from gp_up_to_2015 table
-CancerPatientPercentage <- GetGPQofAchievementField(db, practiceID, 
+# get a single field from qof_achievement table
+CancerPatientPercentage <- getGPQofAchievementField(db, practiceID, 
                                                     'CAN001', 'ratio')
+print(CancerPatientPercentage)
+
+CancerPatientPercentageAsNumeric <- getGPQofAchievementFieldAsNumeric(db,
+                                                    practiceID, 
+                                                    'CAN001',
+                                                    'ratio')
+print(CancerPatientPercentageAsNumeric)
+
+# get a percentage of patients in Wales diagnosed with cancer
+# from qof_achievement table
+CancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
 print(CancerPatientPercentage)
 
 # check total amount of patients in a practice
@@ -113,7 +125,8 @@ W00005PatientTotal <- GetPracticeAmountOfPatients(db, 'W00005')
 print(W00005PatientTotal)
 
 # get percentage of patients in a single practice that have cancer
-PracticeCancerPercentageTest <- GetPracticePercentageOfPatientsWithCancer(db, practiceID)
+PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db,
+                                                                    practiceID)
 print(PracticeCancerPercentageTest)
 
 # Get single practice full table from gp_data_up_to_2015
@@ -128,9 +141,21 @@ View(topFivePrescribedDrugsTest)
 orgCode <- GetColumn(db, 'qof_achievement', 'orgcode')
 View(orgCode)
 
+#b <- ggplot(data = CancerPatientPercentage[0][0], aes(x=cty, y=hwy))
+
+df <- data.frame( diagnosedData = c(practiceID, "Wales"),
+                 PatientsDiagnosedWithCancer = c(as.numeric(PracticeCancerPercentageTest) * 100,
+                           as.numeric(CancerPatientPercentageInWales) * 100))
+
+b <- ggplot(data=df, aes(x = '',
+                         y = 'Patients Diagnosed With Cancer',
+                         fill = diagnosedData,
+                         label = PatientsDiagnosedWithCancer)) +
+                         geom_bar(stat="identity")
+                         b + geom_text()
 
 
-
+            as.numeric(PracticeCancerPercentageTest) * 100
 
 #------------------------------------------------------------------------------
 # Disconnect database and driver
