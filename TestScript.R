@@ -79,6 +79,10 @@ practiceID = 'W00005'
 qofAchievementCAN001 <- getQofAchievementIndicator(db, 'CAN001')
 View(qofAchievementCAN001)
 
+# Get all CAN001 indicators from qof_achievement table
+qofAchievementCAN001 <- getQofAchievementIndicatorAndPractice(db, 'CAN001', practiceID)
+View(qofAchievementCAN001)
+
 # get complete table for qof_achievement and practiceID
 qofAchievementW00005 <- getGPQofAchievementTable(db, 10)
 
@@ -87,13 +91,19 @@ gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
 View(gettabletest)
 
 # get specific table from gp_practice_data database, with limit on rows returned
-getGPAddressTable(db, 10)
+getGPDataUpTo2015Table(db, 10)
 
-#check total amount of patients in a practice
-# field4 is total amount of patients in a single practice
-# when CAN001 is used, as CAN001 is present in all practice
+# check total amount of patients in a practice
+
 W00005PatientTotal <- GetPracticeAmountOfPatients(db, 'W00005')
 print(W00005PatientTotal)
+
+#
+singlePracticeTest <- getSinglePracticeGPdataUpTo2015(db, practiceID)
+View(singlePracticeTest)
+
+topFivePrescribedDrugsTest <- getTopFiveDrugSpendSinglePractice(db, practiceID)
+View(topFivePrescribedDrugsTest)
 
 
 #------------------------------------------------------------------------------

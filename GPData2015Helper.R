@@ -230,6 +230,8 @@ getGPQofIndicatorTable <- function(db, limit){
 # Total number of patients in practice
 # using CAN001 automatically to ignore subsets of patients
 # Inputs: (Database connection, Practice ID(e.g. W#####))
+# Outputs: single practice total amount of registered patients
+# note: CAN001 is used, as CAN001 is present in every practice
 GetPracticeAmountOfPatients <- function(db, practiceID){
   totalPatients <- dbGetQuery(db,qq(
     'select field4
@@ -303,6 +305,42 @@ getQofAchievementIndicatorAndPractice <- function(db, indicator,practiceID){
              indicator)
   
   return(achievementIndicatorAndPractice)
+}
+
+getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
+  dbGetQuery(db, qq(
+    'select * from gp_data_up_to_2015
+    where practiceid like \'@{practiceID}\';'
+  ))
+} 
+
+# Get top 5 drugs prescribed by a single practice (transformed)
+# Inputs: (Database Connection, practiceID)
+# Outputs: table: top 5 drugs prescribed by a single practice
+getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
+  
+  topFivePrescribedDrugs <- dbGetQuery(db, qq(
+    'select practiceid, bnfcode, bnfname, items, actcost from gp_data_up_to_2015
+    where practiceid like \'@{practiceID}\';')) %>%
+
+    # rename columns to a more user friendly output
+    select(practiceid = practiceid, drugcode = bnfcode, drugname = bnfname,
+           prescriptionquantity = items, costperprescription = actcost) %>%
+    
+    # group by drug code to avoid different inputs for same drugname
+    group_by(drugcode) %>%
+    
+    # sum prescription quantity
+    summarise(practiceid, drugcode, drugname, prescriptiontotal=sum(prescriptionquantity), costperprescription) %>%
+    
+    # only get unique rows by drugcode
+    distinct(drugcode, .keep_all = TRUE) %>%
+    ungroup() %>%
+    
+    # output top 5 prescribed drugs
+    arrange(desc(prescriptiontotal)) %>% head(5)
+  
+  return(topFivePrescribedDrugs)
 }
 
 # Complete table for a single practice
