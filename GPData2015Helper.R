@@ -170,6 +170,7 @@ gpQofIndicatorTableTidy <- function(db){
 getGPAddressTable <- function(db, limit){
   QofAddressTable <- getTable(db, 'address', limit)
   View(QofAddressTable)
+  
   return(QofAddressTable)
 }
 
@@ -179,6 +180,7 @@ getGPAddressTable <- function(db, limit){
 getGPBnfTable <- function(db, limit){
   BnfTable <- getTable(db, 'bnf', limit)
   View(BnfTable)
+  
   return(BnfTable)
 }
 
@@ -188,6 +190,7 @@ getGPBnfTable <- function(db, limit){
 getGPChemSubstanceTable <- function(db, limit){
   ChemSubstanceTable <- getTable(db, 'chemsubstance', limit)
   View(ChemSubstanceTable)
+  
   return(ChemSubstanceTable)
 }
 
@@ -197,24 +200,27 @@ getGPChemSubstanceTable <- function(db, limit){
 getGPDataUpTo2015Table <- function(db, limit){
   GPDataUpTo2015Table <- getTable(db, 'gp_data_up_to_2015', limit)
   View(GPDataUpTo2015Table)
+  
   return(GPDataUpTo2015Table)
 }
 
 # Get and display GP qof_achievements Table
 # Inputs: (Database connection, Row limit)
 #--  Warning: large tables can be slow to retrieve with high limit values set
-getQofAchievementTable <- function(db, limit){
+getGPQofAchievementTable <- function(db, practiceID, limit){
   QofAchievementTable <- getTable(db, 'qof_achievement', limit)
   View(QofAchievementTable)
+  
   return(QofAchievementTable)
 }
 
 # Get and display GP qof_indicators Table
 # Inputs: (Database connection, Row limit)
 #--  Warning: large tables can be slow to retrieve with high limit values set
-getQofIndicatorTable <- function(db, table, limit){
-  QofIndicatorTable <- getTable(db, table, limit)
+getGPQofIndicatorTable <- function(db, limit){
+  QofIndicatorTable <- getTable(db, 'qof_indicator', limit)
   View(QofIndicatorTable)
+  
   return(QofIndicatorTable)
 }
 
@@ -236,25 +242,69 @@ GetPracticeAmountOfPatients <- function(db, practiceID){
 
 # Get Indicator from qof_achievement table
 # Inputs: (Database Connection, Indicator type (e.g. CAN001))
-getQofAchievementIndicator <- function(db, indicator){
-  dbGetQuery(db,qq(
+# Outputs: Raw qof_achievement table, filtered by indicator
+getQofAchievementIndicatorRaw <- function(db, indicator){
+  achievementIndicator <- dbGetQuery(db,qq(
     'select * from qof_achievement
     where indicator like \'@{indicator}\';'))
 }
+  
+# Get Indicator from qof_achievement table (transformed)
+# Inputs: (Database Connection, Indicator type (e.g. CAN001))
+# Outputs: qof_achievement table transformed, filtered by indicator
+# (column renames: orgcode = practiceid, numerator = indicatorpatients,
+#                  field4 = practicepatientstotal, patientratio,
+#                  indicator = indicator)
+getQofAchievementIndicator <- function(db, indicator){
+  achievementIndicator <- dbGetQuery(db,qq(
+    'select * from qof_achievement
+    where indicator like \'@{indicator}\';')) %>% 
+    
+    # take only the columns interested in and rename as below
+      select(practiceid = orgcode,
+                  indicatorpatients = numerator,
+                  practicepatientstotal = field4,
+                  patientratio = ratio,
+                  indicator)
+  
+  return(achievementIndicator)
+}
 
-getAchieveIndiAndPractice <- function(db, indicator,practiceID){
-    dbGetQuery(db,qq(
-      'select * from qof_achievement
+# Get Indicator from qof_achievement table
+# Inputs: (Database Connection, Indicator type (e.g. CAN001), practiceID)
+# Outputs: Raw qof_achievement table filtered by indicator for a single PracticeID
+getQofAchievementIndicatorAndPracticeRaw <- function(db, indicator,practiceID){
+  achievementIndicatorAndPractice <- dbGetQuery(db,qq(
+    'select * from qof_achievement
       where indicator like \'@{indicator}\'
       and orgcode like \'@{practiceID}\';'
-      ))
+  ))
+  
+  return(achievementIndicatorAndPractice)
+}
+
+# Get Indicator from qof_achievement table for a single practice (transformed)
+# Inputs: (Database Connection, Indicator type (e.g. CAN001), practiceID)
+# Outputs: qof_achievement table, filtered by indicator, practiceID
+# (column renames: orgcode = practiceid, numerator = indicatorpatients,
+#                  field4 = practicepatientstotal, patientratio,
+#                  indicator = indicator)
+getQofAchievementIndicatorAndPractice <- function(db, indicator,practiceID){
+  achievementIndicatorAndPractice <- dbGetQuery(db,qq(
+      'select * from qof_achievement
+      where indicator like \'@{indicator}\'
+      and orgcode like \'@{practiceID}\';')) %>%
+    
+    # take only the columns interested in and rename as below
+    select(practiceid = orgcode,
+             indicatorpatients = numerator,
+             practicepatientstotal = field4,
+             patientratio = ratio,
+             indicator)
+  
+  return(achievementIndicatorAndPractice)
 }
 
 # Complete table for a single practice
 # Inputs: (Database connection, table name, Practice ID(e.g. W#####))
-getPracticeTable <- function(db, table, practiceID){
-  dbGetQuery(db,qq(
-    'select *
-    from @{table}
-    where orgcode like \'@{practiceID}\';'))
-}
+

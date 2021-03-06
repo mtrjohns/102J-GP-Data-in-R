@@ -80,13 +80,13 @@ qofAchievementCAN001 <- getQofAchievementIndicator(db, 'CAN001')
 View(qofAchievementCAN001)
 
 # get complete table for qof_achievement and practiceID
-qofAchievementW00005 <- getPracticeTable(db, 'gp_data_up_to_2015', practiceID)
-View(qofAchievementW00005)
+qofAchievementW00005 <- getGPQofAchievementTable(db, 10)
 
-# Get complete table from a PostGreSQL database
+# Get complete table from a PostGreSQL database with set limit on rows
 gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
 View(gettabletest)
 
+# get specific table from gp_practice_data database, with limit on rows returned
 getGPAddressTable(db, 10)
 
 #check total amount of patients in a practice
