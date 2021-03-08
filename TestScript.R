@@ -25,7 +25,7 @@ source("ConnectPostgreSQL.R")
 source("PostgreSQLHelper.R")
 source("GPData2015Helper.R")
 
-#------------------------------------------------------------------------------
+
 # Database connections and PostgreSQL driver initialisation
 #------------------------------------------------------------------------------
 
@@ -90,7 +90,9 @@ View(qofAchievementCAN001)
 qofAchievementW00005 <- getGPQofAchievementTable(db, practiceID, 10)
 
 # Get complete table from a PostGreSQL database with set limit on rows
-gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
+gettabletest <- getTable(db, 'qof_achievement', 10)
+View(gettabletest)
+gettabletest <- getTable(db, 'qof_indicator', 10)
 View(gettabletest)
 
 #check for any NA values in each column (can just pipe summary)
@@ -129,32 +131,74 @@ topFivePrescribedDrugsTest <- getTopFiveDrugSpendSinglePractice(db, practiceID)
 View(topFivePrescribedDrugsTest)
 
 # Get percentage of patients diagnosed with cancer in a single practice
-orgCode <- GetColumn(db, 'qof_achievement', 'orgcode')
+orgCode <- getColumn(db, 'qof_achievement', 'orgcode')
 View(orgCode)
+
+# get current practice code, as a dataframe
+currentPracticeRegionCode <- getGPPracticeRegionCode(db, practiceID)
+print(currentPracticeRegionCode)
+
+# get current Practice's region code(hb)
+currentPracticeRegionMeanCancerRate <- getPracticeRegionDiagnosedCancerMean(db, practiceID)
+print(mean231$regionDiagnosedCancerRate[1])
 
 # get a percentage of patients in Wales diagnosed with cancer
 # from qof_achievement table
 CancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
 print(CancerPatientPercentageInWales)
 
-
 # get percentage of patients in a single practice that have cancer
 PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db,
                                                                           practiceID)
 print(PracticeCancerPercentageTest)
 
-# Show Comparison graph of practice and wales cancer diagnosis rates
-barCancerRateComparisonPracticeRegionWales(practiceID, 
-                                        PracticeCancerPercentageTest,
-                                        CancerPatientPercentageInWales)
+tester4 <- getRegionDiagnosedCancerMean(db, getHywelDdaHB7A2(db))
+print(tester4)
 
-lhb7A1 <- getHealthBoardGPdataUpTo2015(db, '7A1')
-View(lhb7A1)
-rm(lhb7A1)
-hb7A1 <- GPData2015 <- dbGetQuery(db, qq(
-  'select hb, practiceid from gp_data_up_to_2015
-    where hb like \'7A1\';'))
-View(hb7A1)
+# Show Comparison graph of practice, practice's region(by health board) 
+# and wales cancer diagnosis rates
+barCancerRateComparisonPracticeRegionWales(db, practiceID)
+
+# test i
+betsiCadwaladrHB7A1Test <- getbetsiCadwaladrHB7A1(db)
+View(betsiCadwaladrHB7A1Test)
+summary(betsiCadwaladrHB7A1Test)
+
+# return diagnoed cancer patient percentage
+DiagnosedCancerPercentage <- getPercentWithIndicator(db, 'CAN001') %>% 
+                                    filter(!grepl('WAL', orgcode))
+View(DiagnosedCancerPercentageFull)
+
+# return diagnosed dementia patient percentage
+DiagnosedDementiaPercentage <- getPercentWithIndicator(db, 'DM001') %>% 
+  filter(!grepl('WAL', orgcode))
+View(DiagnosedDementiaPercentage)
+
+
+
+hywelDdaHB7A2Test <- getHywelDdaHB7A2(db)
+diagnosedCancerPatients <- getdiagnosedCancerPercentage(db) %>% select(cancerrate = ratio, practiceid = orgcode)
+test2 <- hywelDdaHB7A2Test %>% left_join(diagnosedCancerPatients, by = 'practiceid') #%>% summarise(mean(cancerrate))
+summary(test2)
+
+test22 <- test2 %>% summarise(mean(cancerrate, na.rm = TRUE))
+View(test22)
+summary(test22)
+
+
+ratioACH <- QofAchievementRatio <- dbGetQuery(db, qq(
+  'select ratio, orgcode
+    from  qof_achievement
+    where indicator like \'CAN001\';'))
+
+ratioACH <- ratioACH %>% select(cancerrate = ratio, practiceid = orgcode)
+View(ratioACH)
+summary(ratioACH)
+summedratio <- ratioACH %>% summarise(mean(cancerrate))
+print(summedratio)
+
+test2 <- lhb7A1 %>% left_join(ratioACH, by = 'practiceid')
+View(test2)
 #------------------------------------------------------------------------------
 # Disconnect database and driver
 #------------------------------------------------------------------------------

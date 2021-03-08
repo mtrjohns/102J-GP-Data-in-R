@@ -225,7 +225,107 @@ getGPQofIndicatorTable <- function(db, limit){
 }
 
 #------------------------------------------------------------------------------
-# Cancer Database get functions
+# Region Table Functions
+#------------------------------------------------------------------------------
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection, healthboard Code (e.g. 7A1)
+# Outputs: Single Healthboard table and practiceID
+getHealthBoardGPdataUpTo2015 <- function(db, healthBoard){
+  GPData2015Hb <- dbGetQuery(db, qq(
+    'select distinct(hb), practiceid from gp_data_up_to_2015
+    where hb like \'@{healthBoard}\';'
+  ))
+  return(GPData2015Hb)
+}
+
+# Get Practice Region(hb) Code
+getGPPracticeRegionCode <- function(db, practiceID){
+  # get Region(hb) Code field from specific practice
+  regionCode <- dbGetQuery(db, qq(
+      'select distinct(hb) from gp_data_up_to_2015
+    where practiceid like \'@{practiceID}\';'))
+    
+    return(regionCode)
+}
+
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: betsiCadwaladrHB7A1 Healthboard table
+getbetsiCadwaladrHB7A1 <- function(db){
+  betsiCadwaladrHB7A1 <- getHealthBoardGPdataUpTo2015(db, '7A1')
+  #View(betsiCadwaladrHB7A1)
+  #summary(betsiCadwaladrHB7A1)
+  
+  return(betsiCadwaladrHB7A1)
+}
+
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: hywelDdaHB7A2 Healthboard table
+getHywelDdaHB7A2 <- function(db){
+  hywelDdaHB7A2 <- getHealthBoardGPdataUpTo2015(db, '7A2')
+  #View(hywelDdaHB7A2)
+  #summary(hywelDdaHB7A2)
+  
+  return(hywelDdaHB7A2)
+}
+
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: abertaweBroMorgannwgHB7A3 Healthboard table
+getAbertaweBroMorgannwgHB7A3 <- function(db){
+  abertaweBroMorgannwgHB7A3 <- getHealthBoardGPdataUpTo2015(db, '7A3')
+  #View(abertaweBroMorgannwgHB7A3)
+  #summary(abertaweBroMorgannwgHB7A3)
+  
+  return(abertaweBroMorgannwgHB7A3)
+}
+  
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: betsiCadwaladrHB7A1 Healthboard table
+getCardiffAndValeHB7A4 <- function(db){
+  cardiffAndValeHB7A4 <- getHealthBoardGPdataUpTo2015(db, '7A4')
+  #View(cardiffAndValeHB7A4)
+  #summary(cardiffAndValeHB7A4)
+  
+  return(cardiffAndValeHB7A4)
+}
+
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: cwmTafHB7A5 Healthboard table
+getCwmTafHB7A5 <- function(db){
+  cwmTafHB7A5 <- getHealthBoardGPdataUpTo2015(db, '7A5')
+  #View(cwmTafHB7A5)
+  #summary(cwmTafHB7A5)
+  
+  return(cwmTafHB7A5)
+}
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: aneurinBevanHB7A6 Healthboard table
+getAneurinBevanHB7A6 <- function(db){
+
+  aneurinBevanHB7A6 <- getHealthBoardGPdataUpTo2015(db, '7A6')
+  #View(aneurinBevanHB7A6)
+  #summary(aneurinBevanHB7A6)
+  
+  return(aneurinBevanHB7A6)
+}
+# Get a single regions healthboard(hb) records from gp_data_up_to_2015 table
+# Inputs: (Database Connection)
+# Outputs: powysTeachingHB7A7 Healthboard table
+getPowysTeachingHB7A7 <- function(db){ 
+  powysTeachingHB7A7 <- getHealthBoardGPdataUpTo2015(db, '7A7')
+  #View(powysTeachingHB7A7)
+  #summary(powysTeachingHB7A7)
+  
+  return(powysTeachingHB7A7)
+}
+
+#------------------------------------------------------------------------------
+# Total amount of patients in a practice
 #------------------------------------------------------------------------------
 # Total number of patients in practice
 # using CAN001 automatically to ignore subsets of patients
@@ -242,6 +342,134 @@ getPracticeAmountOfPatients <- function(db, practiceID){
     return(as.numeric(totalPatients))
 }
 
+#------------------------------------------------------------------------------
+getPercentWithIndicator <- function(db, indicator){
+  dbGetQuery(db, qq(
+  'select ratio, orgcode
+    from  qof_achievement
+    where indicator like \'@{indicator}\';'))
+}
+
+getPercentageofPatientsWithIndicatorRegion <- function(db, indicator){
+  dbGetQuery(db, qq(
+    'select ratio, orgcode
+    from  qof_achievement
+    where indicator like \'CAN001\';'))
+}
+
+#------------------------------------------------------------------------------
+# Health Condition Percentage of patient functions
+#------------------------------------------------------------------------------
+getdiagnosedCancerPercentage <- function(db){
+  diagnosedCancerPercentage <- getPercentWithIndicator(db, 'CAN001') %>% 
+    filter(!grepl('WAL', orgcode))
+    #View(diagnosedCancerPercentage)
+    
+    return(diagnosedCancerPercentage)
+}
+
+getDiagnosedDementiaPercentage <- function(db){
+  diagnosedDementiaPercentage <- getPercentWithIndicator(db, 'DM001') %>% 
+    filter(!grepl('WAL', orgcode))
+  #View(diagnosedDementiaPercentage)
+  
+  return(diagnosedDementiaPercentage)
+}
+
+#------------------------------------------------------------------------------
+# Get percentage in region functions
+#------------------------------------------------------------------------------
+
+# return mean cancer rate for a region
+# Inputs(Database Connection, one of 7 healthboard functions:
+#
+#               getbetsiCadwaladrHB7A1()
+#               getHywelDdaHB7A2()
+#               getAbertaweBroMorgannwgHB7A3()
+#               getCardiffAndValeHB7A4()
+#               getCwmTafHB7A5()
+#               getAneurinBevanHB7A6()
+#               getPowysTeachingHB7A7()     )
+#
+#Outputs: Mean Cancer Rate dependant on region input
+getRegionDiagnosedCancerMean <- function(db, filteredHealthBoard){
+  
+  # obtain results from database gp_data_up_to_2015 table
+  Region <- filteredHealthBoard
+  
+  # get cancer percent from qof_achievement database table
+  DiagnosedCancerPatients <- getdiagnosedCancerPercentage(db) %>% 
+    select(cancerrate = ratio, practiceid = orgcode)
+  
+  # join tables together to associate orgcode and practice code to cancerrate
+  result <- Region %>% 
+    left_join(DiagnosedCancerPatients, by = 'practiceid') %>%
+    summarise(regionDiagnosedCancerRate = 
+                round(mean(cancerrate, na.rm = TRUE) * 100, digits = 2))
+
+  print(result)
+  
+  return(result)
+}
+
+# get current practice's region(hb) mean cancer rate
+getPracticeRegionDiagnosedCancerMean <- function(db, practiceID){
+  #case_when(result <- healthBoard == '7A1' ~ 
+   #           getRegionDiagnosedCancerMean(db, getbetsiCadwaladrHB7A1(db)),
+    #        healthBoard == '7A2' ~ 
+     #         getRegionDiagnosedCancerMean(db, getHywelDdaHB7A2(db)),
+      #      healthBoard == '7A3' ~ 
+       #       getRegionDiagnosedCancerMean(db, getAbertaweBroMorgannwgHB7A3(db)),
+        #    healthBoard == '7A4' ~ 
+         #     getRegionDiagnosedCancerMean(db, getCardiffAndValeHB7A4(db)),
+          #  healthBoard == '7A5' ~ 
+           #   getRegionDiagnosedCancerMean(db, getCwmTafHB7A5(db)),
+            #healthBoard == '7A6' ~ 
+             # getRegionDiagnosedCancerMean(db, getAneurinBevanHB7A6(db)),
+            #healthBoard == '7A7' ~ 
+             # getRegionDiagnosedCancerMean(db, getPowysTeachingHB7A7(db)),
+            
+           #        )
+
+  
+  currentHb <- getGPPracticeRegionCode(db, practiceID)
+  
+  if(currentHb[1] == '7A1'){
+    result <- getRegionDiagnosedCancerMean(db, getbetsiCadwaladrHB7A1(db))
+    print('7A1')
+  }
+  if(currentHb[1] == '7A2'){
+    result <- getRegionDiagnosedCancerMean(db, getHywelDdaHB7A2(db))
+    print('7A2')
+  }
+  if(currentHb[1] == '7A3'){
+    result <- getRegionDiagnosedCancerMean(db, getAbertaweBroMorgannwgHB7A3(db))
+    print('7A3')
+  }
+  if(currentHb[1] == '7A4'){
+    result <- getRegionDiagnosedCancerMean(db, getCardiffAndValeHB7A4(db))
+    print('7A4')
+  }
+  if(currentHb[1] == '7A5'){
+    result <- getRegionDiagnosedCancerMean(db, getCwmTafHB7A5(db))
+    print('7A5')
+  }
+  if(currentHb[1] == '7A6'){
+    result <- getRegionDiagnosedCancerMean(db, getAneurinBevanHB7A6(db))
+    print('7A6')
+  }
+  if(currentHb[1] == '7A7'){
+    result <- getRegionDiagnosedCancerMean(db, getPowysTeachingHB7A7(db))
+    print('7A7')
+  }
+    
+    return(result)
+}
+
+
+#------------------------------------------------------------------------------
+# mixed functions needing sorting
+#------------------------------------------------------------------------------
 # get table single column
 getColumn <- function(db, table, column){
   column <- dbGetQuery(db, qq(
@@ -361,17 +589,6 @@ getQofAchievementIndicatorAndPractice <- function(db, indicator,practiceID){
 # Get a single practice records from gp_data_up_to_2015 table
 # Inputs: (Database Connection, Practice ID)
 # Outputs: Practice Full Table
-getHealthBoardGPdataUpTo2015 <- function(db, healthBoard){
-  GPData2015 <- dbGetQuery(db, qq(
-    'select hb, practiceid from gp_data_up_to_2015
-    where hb like \'@{healthBoard}\';'
-  ))
-  return(GPData2015)
-}
-
-# Get a single practice records from gp_data_up_to_2015 table
-# Inputs: (Database Connection, Practice ID)
-# Outputs: Practice Full Table
 getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
   GPData2015 <- dbGetQuery(db, qq(
     'select * from gp_data_up_to_2015
@@ -416,12 +633,24 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
 
 # Complete table for a single practice
 # Inputs: (Database connection, table name, Practice ID(e.g. W#####))
-barCancerRateComparisonPracticeRegionWales <- function(practiceID, 
-                                                PracticeCancerPercentageTest, 
-                                                CancerPatientPercentageInWales){
-  df <- data.frame( CancerDiagnosisType = c(practiceID, "Wales"),
-                    PatientsDiagnosedWithCancer = c(as.numeric(PracticeCancerPercentageTest),
-                                                    as.numeric(CancerPatientPercentageInWales)))
+barCancerRateComparisonPracticeRegionWales <- function(db, practiceID){
+
+  # get current Practice's region code(hb)
+  regionMeanCancerRate <- getPracticeRegionDiagnosedCancerMean(db, practiceID)
+  
+  # get a percentage of patients in Wales diagnosed with cancer
+  # from qof_achievement table
+  CancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
+  
+  # get percentage of patients in a single practice that have cancer
+  PracticeCancerPercentage <- getPracticePercentageOfPatientsWithCancer(db,
+                                                                    practiceID)
+  
+  df <- data.frame( CancerDiagnosisType = c(practiceID, "Region", "Wales"),
+                                PatientsDiagnosedWithCancer = 
+                                    c(as.numeric(PracticeCancerPercentage),
+                                    as.numeric(regionMeanCancerRate),
+                                    as.numeric(CancerPatientPercentageInWales)))
   
   b <- ggplot(data=df, aes(x = CancerDiagnosisType,
                            y = 'Patients Diagnosed With Cancer',
@@ -429,6 +658,7 @@ barCancerRateComparisonPracticeRegionWales <- function(practiceID,
                            label = paste(PatientsDiagnosedWithCancer, "%"))) +
     geom_bar(stat="identity")
   
-  plot(b + theme(axis.text.y = element_text(angle = 90)) + geom_text(vjust=-0.5))
+  plot(b + theme(axis.text.y = element_text(angle = 90)) + 
+         geom_text(vjust=-0.5))
 }
 
