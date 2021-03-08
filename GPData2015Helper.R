@@ -274,16 +274,21 @@ getGPQofAchievementFieldAsNumeric <- function(db, practiceID, indicator, column)
 }
 
 getPracticePercentageOfPatientsWithCancer <- function(db, practiceID){
-  PercentageOfPatientsWithCancer <- getGPQofAchievementField(db, practiceID, 
+  ratioOfPatientsWithCancer <- getGPQofAchievementField(db, practiceID, 
                                                       'CAN001', 'ratio')
-
+  
+  PercentageOfPatientsWithCancer = 
+    round(as.numeric(ratioOfPatientsWithCancer) * 100, digits=2)
+  
   return(PercentageOfPatientsWithCancer)
 }
 
 getPercentageOfPatientsWithCancerInWales <- function(db){
-  PercentageOfPatientsWithCancerInWales <- getGPQofAchievementField(db, 'WAL', 
+  ratioOfPatientsWithCancerInWales <- getGPQofAchievementField(db, 'WAL', 
                                                              'CAN001', 'ratio')
-
+  PercentageOfPatientsWithCancerInWales =
+    round(as.numeric(ratioOfPatientsWithCancerInWales) * 100, digits=2)
+  
   return(PercentageOfPatientsWithCancerInWales)
 }
   
@@ -356,6 +361,17 @@ getQofAchievementIndicatorAndPractice <- function(db, indicator,practiceID){
 # Get a single practice records from gp_data_up_to_2015 table
 # Inputs: (Database Connection, Practice ID)
 # Outputs: Practice Full Table
+getHealthBoardGPdataUpTo2015 <- function(db, healthBoard){
+  GPData2015 <- dbGetQuery(db, qq(
+    'select hb, practiceid from gp_data_up_to_2015
+    where hb like \'@{healthBoard}\';'
+  ))
+  return(GPData2015)
+}
+
+# Get a single practice records from gp_data_up_to_2015 table
+# Inputs: (Database Connection, Practice ID)
+# Outputs: Practice Full Table
 getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
   GPData2015 <- dbGetQuery(db, qq(
     'select * from gp_data_up_to_2015
@@ -363,6 +379,8 @@ getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
   ))
   return(GPData2015)
 }
+
+
 
 # Get top 5 drugs prescribed by a single practice (transformed)
 # Inputs: (Database Connection, practiceID)
@@ -398,4 +416,19 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
 
 # Complete table for a single practice
 # Inputs: (Database connection, table name, Practice ID(e.g. W#####))
+barCancerRateComparisonPracticeRegionWales <- function(practiceID, 
+                                                PracticeCancerPercentageTest, 
+                                                CancerPatientPercentageInWales){
+  df <- data.frame( CancerDiagnosisType = c(practiceID, "Wales"),
+                    PatientsDiagnosedWithCancer = c(as.numeric(PracticeCancerPercentageTest),
+                                                    as.numeric(CancerPatientPercentageInWales)))
+  
+  b <- ggplot(data=df, aes(x = CancerDiagnosisType,
+                           y = 'Patients Diagnosed With Cancer',
+                           fill = CancerDiagnosisType,
+                           label = paste(PatientsDiagnosedWithCancer, "%"))) +
+    geom_bar(stat="identity")
+  
+  plot(b + theme(axis.text.y = element_text(angle = 90)) + geom_text(vjust=-0.5))
+}
 

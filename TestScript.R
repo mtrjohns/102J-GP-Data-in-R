@@ -90,13 +90,14 @@ View(qofAchievementCAN001)
 qofAchievementW00005 <- getGPQofAchievementTable(db, practiceID, 10)
 
 # Get complete table from a PostGreSQL database with set limit on rows
-gettabletest <- getTable(db, 'address', 10)
+gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
 View(gettabletest)
 
 #check for any NA values in each column (can just pipe summary)
 summary(gettabletest)
 
-getColumn(db, 'gp_data_up_to_2015', 'hb') %>% distinct %>% summary()
+# get local health board structure
+Locality <- getColumn(db, 'gp_data_up_to_2015', 'hb') %>% distinct %>% summary()
 Locality
 print(Locality)
 
@@ -115,19 +116,9 @@ CancerPatientPercentageAsNumeric <- getGPQofAchievementFieldAsNumeric(db,
                                                     'ratio')
 print(CancerPatientPercentageAsNumeric)
 
-# get a percentage of patients in Wales diagnosed with cancer
-# from qof_achievement table
-CancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
-print(CancerPatientPercentage)
-
 # check total amount of patients in a practice
 W00005PatientTotal <- GetPracticeAmountOfPatients(db, 'W00005')
 print(W00005PatientTotal)
-
-# get percentage of patients in a single practice that have cancer
-PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db,
-                                                                    practiceID)
-print(PracticeCancerPercentageTest)
 
 # Get single practice full table from gp_data_up_to_2015
 singlePracticeTest <- getSinglePracticeGPdataUpTo2015(db, practiceID)
@@ -141,22 +132,29 @@ View(topFivePrescribedDrugsTest)
 orgCode <- GetColumn(db, 'qof_achievement', 'orgcode')
 View(orgCode)
 
-#b <- ggplot(data = CancerPatientPercentage[0][0], aes(x=cty, y=hwy))
-
-df <- data.frame( diagnosedData = c(practiceID, "Wales"),
-                 PatientsDiagnosedWithCancer = c(as.numeric(PracticeCancerPercentageTest) * 100,
-                           as.numeric(CancerPatientPercentageInWales) * 100))
-
-b <- ggplot(data=df, aes(x = '',
-                         y = 'Patients Diagnosed With Cancer',
-                         fill = diagnosedData,
-                         label = PatientsDiagnosedWithCancer)) +
-                         geom_bar(stat="identity")
-                         b + geom_text()
+# get a percentage of patients in Wales diagnosed with cancer
+# from qof_achievement table
+CancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
+print(CancerPatientPercentageInWales)
 
 
-            as.numeric(PracticeCancerPercentageTest) * 100
+# get percentage of patients in a single practice that have cancer
+PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db,
+                                                                          practiceID)
+print(PracticeCancerPercentageTest)
 
+# Show Comparison graph of practice and wales cancer diagnosis rates
+barCancerRateComparisonPracticeRegionWales(practiceID, 
+                                        PracticeCancerPercentageTest,
+                                        CancerPatientPercentageInWales)
+
+lhb7A1 <- getHealthBoardGPdataUpTo2015(db, '7A1')
+View(lhb7A1)
+rm(lhb7A1)
+hb7A1 <- GPData2015 <- dbGetQuery(db, qq(
+  'select hb, practiceid from gp_data_up_to_2015
+    where hb like \'7A1\';'))
+View(hb7A1)
 #------------------------------------------------------------------------------
 # Disconnect database and driver
 #------------------------------------------------------------------------------
