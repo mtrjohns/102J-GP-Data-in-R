@@ -626,7 +626,7 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
     ungroup() %>%
     
     # output top 5 prescribed drugs
-    arrange(desc(prescriptiontotal)) %>% head(5)
+    arrange(desc(prescriptiontotal))# %>% head(5)
   
   return(topFivePrescribedDrugs)
 }

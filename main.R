@@ -31,6 +31,7 @@ db <- connectDB(database_driver,
                       'localhost', 5432,
                       'postgres')
 
+
 #------------------------------------------------------------------------------
 # User selects Practice ID
 #------------------------------------------------------------------------------
@@ -44,7 +45,9 @@ View(topFivePrescribedDrugsTest)
 PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db, 
                                                             practiceID)
 
-
+# Show Comparison graph of practice, practice's region(by health board) 
+# and wales cancer diagnosis rates
+barCancerRateComparisonPracticeRegionWales(db, practiceID)
 
 
 
