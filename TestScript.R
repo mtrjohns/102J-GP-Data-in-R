@@ -92,7 +92,7 @@ qofAchievementW00005 <- getGPQofAchievementTable(db, practiceID, 10)
 # Get complete table from a PostGreSQL database with set limit on rows
 gettabletest <- getTable(db, 'qof_achievement', 10)
 View(gettabletest)
-gettabletest <- getTable(db, 'qof_indicator', 10)
+gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
 View(gettabletest)
 
 #check for any NA values in each column (can just pipe summary)
@@ -196,6 +196,8 @@ View(ratioACH)
 summary(ratioACH)
 summedratio <- ratioACH %>% summarise(mean(cancerrate))
 print(summedratio)
+
+
 
 test2 <- lhb7A1 %>% left_join(ratioACH, by = 'practiceid')
 View(test2)

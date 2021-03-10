@@ -626,9 +626,17 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
     ungroup() %>%
     
     # output top 5 prescribed drugs
-    arrange(desc(prescriptiontotal))# %>% head(5)
+    arrange(desc(prescriptiontotal)) %>% head(5)
   
   return(topFivePrescribedDrugs)
+}
+
+getAllPraticeActCostSum <- function(db){
+  
+  actcostSummedTable <- dbGetQuery(db, qq(
+    'select practiceid, bnfcode, bnfname, items, actcost
+      from gp_data_up_to_2015
+      where practiceid like \'@{practiceID}\';'))
 }
 
 # Complete table for a single practice
