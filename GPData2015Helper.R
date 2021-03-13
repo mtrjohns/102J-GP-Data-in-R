@@ -330,7 +330,8 @@ getPowysTeachingHB7A7 <- function(db){
 # Total number of patients in practice
 # using CAN001 automatically to ignore subsets of patients
 # Inputs: (Database connection, Practice ID(e.g. W#####))
-# Outputs: single practice total amount of registered patients
+# Outputs: single practice total amount of registered patients for a practice 
+#          as a numeric
 # note: CAN001 is used, as CAN001 is present in every practice
 getPracticeAmountOfPatients <- function(db, practiceID){
   totalPatients <- dbGetQuery(db,qq(
@@ -340,6 +341,15 @@ getPracticeAmountOfPatients <- function(db, practiceID){
     orgcode like \'@{practiceID}\';'))
     
     return(as.numeric(totalPatients))
+}
+
+getPracticeAmountOfPatientsAll <- function(db){
+  totalPatientsAllPractices <- dbGetQuery(db,qq(
+    'select field4, orgcode
+    from qof_achievement
+    where indicator like \'CAN001\';'))
+  
+  return(totalPatientsAllPractices)
 }
 
 #------------------------------------------------------------------------------
@@ -611,15 +621,14 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
 
     # rename columns to a more user friendly output
     select(practiceid = practiceid, drugcode = bnfcode, drugname = bnfname,
-           prescriptionquantity = items, costperprescription = actcost) %>%
+           prescriptionquantity = items) %>%
     
     # group by drug code to avoid different inputs for same drugname
     group_by(drugcode) %>%
     
     # sum prescription quantity
     summarise(practiceid, drugcode, drugname, 
-              prescriptiontotal=sum(prescriptionquantity), 
-              costperprescription) %>%
+              prescriptiontotal=sum(prescriptionquantity)) %>%
     
     # only get unique rows by drugcode
     distinct(drugcode, .keep_all = TRUE) %>%
@@ -631,12 +640,30 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
   return(topFivePrescribedDrugs)
 }
 
-getAllPraticeActCostSum <- function(db){
+getAllPracticeActCostSum <- function(db){
   
-  actcostSummedTable <- dbGetQuery(db, qq(
+  cat("Obtaining all practices spending... Please wait...")
+  # get actcost and practiceid from gp data
+  actCostGP <- dbGetQuery(db, qq(
     'select practiceid, bnfcode, bnfname, items, actcost
-      from gp_data_up_to_2015
-      where practiceid like \'@{practiceID}\';'))
+      from gp_data_up_to_2015;')) %>%
+  
+    # rename columns to a more user friendly output
+    select(practiceid = practiceid, drugcode = bnfcode, drugname = bnfname,
+         prescriptionquantity = items, prescriptionCostTotal = actcost) %>%
+  
+    group_by(practiceid) %>%
+    
+    summarise(sum(prescriptionCostTotal))
+  
+  # get patient count from qof_indicator
+  patientTotalAllPractices <- getPracticeAmountOfPatientsAll(db) %>%
+    select(practiceid = orgcode, totalPatients = field4)
+  
+  actCostGP %>% left_join(patientTotalAllPractices, by = 'practiceid')
+  # 
+  
+  
 }
 
 # Complete table for a single practice

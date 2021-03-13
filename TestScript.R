@@ -99,9 +99,9 @@ View(gettabletest)
 summary(gettabletest)
 
 # get local health board structure
-Locality <- getColumn(db, 'gp_data_up_to_2015', 'hb') %>% distinct %>% summary()
+Locality <- getColumn(db, 'gp_data_up_to_2015', 'actcost')
 Locality
-print(Locality)
+summary(Locality)
 
 # get specific table from gp_practice_data database, with limit on rows returned
 getSummaryTableTest <- getGPDataUpTo2015Table(db, 100) %>% summary()
@@ -201,6 +201,12 @@ print(summedratio)
 
 test2 <- lhb7A1 %>% left_join(ratioACH, by = 'practiceid')
 View(test2)
+
+# get presctiption total
+tesfewfe <- getAllPracticeActCostSum(db)
+View(tesfewfe)
+summary(tesfewfe)
+
 #------------------------------------------------------------------------------
 # Disconnect database and driver
 #------------------------------------------------------------------------------
