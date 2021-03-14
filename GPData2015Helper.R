@@ -637,33 +637,70 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
     # output top 5 prescribed drugs
     arrange(desc(prescriptiontotal)) %>% head(5)
   
+    View(topFivePrescribedDrugs)
+    
   return(topFivePrescribedDrugs)
 }
+
+#---------------------------------------------------------
+# actcost
+#---------------------------------------------------------
+
+getGPPrescriptionTotalSpend <- function(db){
+  cat("Obtaining all practices spending... Please wait...")
+  
+  # get actcost and practiceid from gp data
+  GPPrescriptionCost <- dbGetQuery(db, qq(
+    'select practiceid, actcost, hb
+      from gp_data_up_to_2015;')) %>%
+    
+    # rename columns to a more user friendly output
+    select(practiceid = practiceid, healthboard = hb, prescriptionCostTotal = actcost) %>%
+    group_by(practiceid) %>%
+    summarise(practiceid, healthboard, prescriptionCostTotal=round(sum(prescriptionCostTotal),2)) %>%
+    distinct()
+  
+  #View(GPPrescriptionCost)
+  return(GPPrescriptionCost)
+}
+
+getGPTotalPatients <- function(db){
+  # get patient count from qof_indicator
+  GPTotalPatientCount <- getPracticeAmountOfPatientsAll(db)
+  #View(GPTotalPatientCount)
+  return(GPTotalPatientCount)
+}
+
 
 getAllPracticeActCostSum <- function(db){
   
   cat("Obtaining all practices spending... Please wait...")
+  
   # get actcost and practiceid from gp data
-  actCostGP <- dbGetQuery(db, qq(
-    'select practiceid, bnfcode, bnfname, items, actcost
-      from gp_data_up_to_2015;')) %>%
-  
-    # rename columns to a more user friendly output
-    select(practiceid = practiceid, drugcode = bnfcode, drugname = bnfname,
-         prescriptionquantity = items, prescriptionCostTotal = actcost) %>%
-  
-    group_by(practiceid) %>%
+  prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
     
-    summarise(sum(prescriptionCostTotal))
+  
+  #View(prescriptionCostTotal)
+    # sum the presciption total for each practice
+    #summarise(sum(prescriptionCostTotal, na.rm=TRUE))
   
   # get patient count from qof_indicator
-  patientTotalAllPractices <- getPracticeAmountOfPatientsAll(db) %>%
+  GPTotalPatientCount <- getPracticeAmountOfPatientsAll(db) %>%
     select(practiceid = orgcode, totalPatients = field4)
+  #View(GPTotalPatientCount)
   
-  actCostGP %>% left_join(patientTotalAllPractices, by = 'practiceid')
-  # 
+  # join tables by practiceid column
+  prescriptionCostTotalJoined <- GPTotalPatientCount %>% 
+    left_join(prescriptionCostTotal, by = 'practiceid') %>%
+    distinct(practiceid, .keep_all = TRUE) %>%
+    filter(grepl('^W[0-9]{5}$', practiceid))
+    #View(prescriptionCostTotalJoined)
   
-  
+  # calculate average per practice and return full table
+  perPersonSpend <- prescriptionCostTotalJoined %>%
+    mutate(perPatientCost = round(prescriptionCostTotal / totalPatients, 2))
+    
+  return(perPersonSpend)
 }
 
 # Complete table for a single practice
@@ -696,4 +733,35 @@ barCancerRateComparisonPracticeRegionWales <- function(db, practiceID){
   plot(b + theme(axis.text.y = element_text(angle = 90)) + 
          geom_text(vjust=-0.5))
 }
+
+
+# Scatter plot showing Per Patient Drug Spend To Total Registered Patients
+# In Each Practice
+scatterPlotPerPatientSpend <- function(db){
+  
+  mycolors = c("#999999", healthboard="#E69F00", "#56B4E9", "#009E73", "#F0E442",
+               "#0072B2", "#D55E00", "#cc79a7")
+  
+  PerPatientSpending <- getAllPracticeActCostSum(db)
+  
+  s <- ggplot(data=PerPatientSpending, aes(x = totalPatients,
+                                       y = perPatientCost, col=healthboard)) +
+  geom_point() +
+    theme_bw() +
+    scale_color_manual(values=mycolors) +
+  ggtitle("Per Patient Drug Spend To Total Registered Patients In Each Practice") +
+    labs(x = "Registered Patients",
+         y = "Drug Spend (Per Patient)")
+  
+  plot(s)
+}
+
+
+
+
+
+
+
+
+
 

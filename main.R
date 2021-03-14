@@ -39,18 +39,13 @@ db <- connectDB(database_driver,
 practiceID <- userPracticeIDInput()
 # Get top 5 prescribed drugs for a specific practice
 topFivePrescribedDrugsTest <- getTopFiveDrugSpendSinglePractice(db, practiceID)
-View(topFivePrescribedDrugsTest)
-
-# get percentage of patients in a single practice that have cancer
-#PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db, 
-#                                                           practiceID)
 
 # Show Comparison graph of practice, practice's region(by health board) 
 # and wales cancer diagnosis rates
 barCancerRateComparisonPracticeRegionWales(db, practiceID)
 
-
-
+# Visualisation of spend on medication per patient by practice across Wales
+scatterPlotPerPatientSpend(db)
 
 
 
