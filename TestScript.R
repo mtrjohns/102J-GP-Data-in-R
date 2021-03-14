@@ -196,16 +196,28 @@ View(ratioACH)
 summary(ratioACH)
 summedratio <- ratioACH %>% summarise(mean(cancerrate))
 print(summedratio)
-
-
-
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
 test2 <- lhb7A1 %>% left_join(ratioACH, by = 'practiceid')
 View(test2)
 
-# get presctiption total
-tesfewfe <- getAllPracticeActCostSum(db)
-View(tesfewfe)
-summary(tesfewfe)
+# get gp prescription spend total
+gpSpendTotalTest <- getGPPrescriptionTotalSpend(db)
+View(gpSpendTotalTest)
+summary(gpSpendTotalTest)
+
+
+
+# get prescription total -----
+tesfewfe2 <- getAllPracticeActCostSum(db)
+
+View(tesfewfe2)
+summary(tesfewfe2)
+
+testcorcan <- getCorrelationDiagnosedAndTotalSpend(db)
+
+
 
 #------------------------------------------------------------------------------
 # Disconnect database and driver

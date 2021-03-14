@@ -643,7 +643,7 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
 }
 
 #---------------------------------------------------------
-# actcost
+# Actual cost of prescriptions
 #---------------------------------------------------------
 
 getGPPrescriptionTotalSpend <- function(db){
@@ -756,8 +756,79 @@ scatterPlotPerPatientSpend <- function(db){
   plot(s)
 }
 
+#------------------------------------------------------------------------------
+# Correlation of medication spending depending on disease rate
+# at a practice level
+#------------------------------------------------------------------------------
 
+# Correlation between a practice total spend on medication and
+# a disease indicator
+# Inputs (Database connection, Disease indicator (e.g. CAN001),
+# TotalSpendTable (pass result from getGPPrescriptionTotalSpend() function))
+# Outputs: Correlation result
+getCorrelationIndicatorTotalSpend <- function(db, indicator, totalSpendTable){
+  #prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
+  
+  indicatorPatients <- getQofAchievementIndicator(db, indicator) %>%
+    select(practiceid, indicatorpatients, indicator)
+  
+  patients <- indicatorPatients %>% left_join(totalSpendTable, 
+                                                 by = 'practiceid')
+  
+  indicatorCorrelation <- cor.test(as.numeric(patients$indicatorpatients),
+                                as.numeric(patients$prescriptionCostTotal),
+                                method = c("pearson", "kendall", "spearman"))
+  
+  return(indicatorCorrelation)
+  
+}
 
+# Correlation between Cancer, Diabetes, Dementia and Hypertension
+getCorrelationDiagnosedAndTotalSpend <- function(db){
+  
+  prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
+  
+  # calculate correlations between diseases and total drug spending
+  cancerCor <- getCorrelationIndicatorTotalSpend(db, 
+                                                        'CAN001', 
+                                                        prescriptionCostTotal)
+  
+  diabetesCor <- getCorrelationIndicatorTotalSpend(db,
+                                                        'DM001',
+                                                        prescriptionCostTotal)
+  
+  dementiaCor <- getCorrelationIndicatorTotalSpend(db,
+                                                        'DEM001',
+                                                        prescriptionCostTotal)
+  
+  hypertensionCor <- getCorrelationIndicatorTotalSpend(db,
+                                                        'HYP%',
+                                                        prescriptionCostTotal)
+  
+  # Output Correlations
+  df <- data.frame(
+    disease = c("Cancer", "Diabetes", 
+                               "Dementia", "Hypertension"),
+    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 6),
+                                round(diabetesCor[["statistic"]][["t"]], 6),
+                                round(dementiaCor[["statistic"]][["t"]], 6),
+                                round(hypertensionCor[["statistic"]][["t"]], 6)),
+    diseasePValues = c(cancerCor[["p.value"]],
+                       diabetesCor[["p.value"]],
+                       dementiaCor[["p.value"]],
+                       hypertensionCor[["p.value"]]))
+  
+  c <- ggplot(data=df, aes(x = disease,
+                           y = diseaseTotalSpendCorrelation,
+                           fill = disease,
+                           label = paste(diseaseTotalSpendCorrelation, "%"))) +
+    geom_bar(stat="identity")
+  
+  plot(c + theme(axis.text.y = element_text(angle = 90)) + 
+         geom_text(vjust=-0.5))
+  
+  
+}
 
 
 
