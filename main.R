@@ -47,33 +47,13 @@ barCancerRateComparisonPracticeRegionWales(db, practiceID)
 # Visualisation of spend on medication per patient by practice across Wales
 scatterPlotPerPatientSpend(db)
 
+getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
 
+getCorDiagnosedCanSmokAsthObesAndTotalSpend(db)
 
+getCorAllDiagnosedTotalSpend(db)
 
-
-# check columns of address table
-#dbGetQuery(db, "
-#           select column_name, 
-#	         ordinal_position,
-#           data_type,
-#           character_maximum_length,
-#           numeric_precision
-#           from INFORMATION_SCHEMA.COLUMNS
-#           where table_schema = 'public'
-#           and table_name = 'address';")
-
-#Query a dataset ####
-#surgery <- dbGetQuery(db, "select distinct a.practiceid 
-#                      from address a
-#                      join gp_data_up_to_2015 b
-#                      on a.practiceid = b.practiceid;")
-#View(surgery)
-
-#surgery <- sort(surgery$practiceid)
-
-#total_rows <- dbGetQuery(db, "select count(*) from public.gp_data_up_to_2015")
-
-
+getCorAllDiagnosedTotalSpendRegion(db)
 
 #------------------------------------------------------------------------------
 # Disconnect database and driver

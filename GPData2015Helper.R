@@ -664,6 +664,26 @@ getGPPrescriptionTotalSpend <- function(db){
   return(GPPrescriptionCost)
 }
 
+getGPPrescriptionTotalSpendRegion <- function(db){
+  cat("Obtaining all practices spending... Please wait...")
+  
+  # get actcost and practiceid from gp data
+  GPPrescriptionCostRegion <- dbGetQuery(db, qq(
+    'select practiceid, actcost, hb
+      from gp_data_up_to_2015;')) %>%
+    
+    # rename columns to a more user friendly output
+    select(practiceid, healthboard = hb, 
+           prescriptionCostTotal = actcost) %>%
+    group_by(healthboard) %>%
+    summarise(practiceid, healthboard, 
+              prescriptionCostTotal=round(sum(prescriptionCostTotal),2)) %>%
+    distinct(healthboard, .keep_all = TRUE)
+  
+  #View(GPPrescriptionCostRegion)
+  return(GPPrescriptionCostRegion)
+}
+
 getGPTotalPatients <- function(db){
   # get patient count from qof_indicator
   GPTotalPatientCount <- getPracticeAmountOfPatientsAll(db)
@@ -724,11 +744,17 @@ barCancerRateComparisonPracticeRegionWales <- function(db, practiceID){
                                     as.numeric(regionMeanCancerRate),
                                     as.numeric(CancerPatientPercentageInWales)))
   
+  # ensure order is kept for output to display practice, region then Wales
+  df$CancerDiagnosisType <- factor(df$CancerDiagnosisType, levels = df$CancerDiagnosisType)
+  
   b <- ggplot(data=df, aes(x = CancerDiagnosisType,
-                           y = 'Patients Diagnosed With Cancer',
+                           y = PatientsDiagnosedWithCancer,
                            fill = CancerDiagnosisType,
                            label = paste(PatientsDiagnosedWithCancer, "%"))) +
-    geom_bar(stat="identity")
+    geom_bar(stat="identity") +
+  ggtitle("Cancer Rate by Practice, Region for Practice and Wales") +
+    labs(x = "Registered Patients (Per Practice)",
+         y = "Percentage of Registered Patients Diagnosed with Cancer")
   
   plot(b + theme(axis.text.y = element_text(angle = 90)) + 
          geom_text(vjust=-0.5))
@@ -750,8 +776,8 @@ scatterPlotPerPatientSpend <- function(db){
     theme_bw() +
     scale_color_manual(values=mycolors) +
   ggtitle("Per Patient Drug Spend To Total Registered Patients In Each Practice") +
-    labs(x = "Registered Patients",
-         y = "Drug Spend (Per Patient)")
+    labs(x = "Registered Patients (Per Practice)",
+         y = "Total Prescription Cost (Per Patient)")
   
   plot(s)
 }
@@ -768,9 +794,11 @@ scatterPlotPerPatientSpend <- function(db){
 # Outputs: Correlation result
 getCorrelationIndicatorTotalSpend <- function(db, indicator, totalSpendTable){
   #prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
+
   
   indicatorPatients <- getQofAchievementIndicator(db, indicator) %>%
-    select(practiceid, indicatorpatients, indicator)
+    select(practiceid, indicatorpatients, indicator) %>%
+    filter(grepl('^W[0-9]{5}$', practiceid))
   
   patients <- indicatorPatients %>% left_join(totalSpendTable, 
                                                  by = 'practiceid')
@@ -784,7 +812,7 @@ getCorrelationIndicatorTotalSpend <- function(db, indicator, totalSpendTable){
 }
 
 # Correlation between Cancer, Diabetes, Dementia and Hypertension
-getCorrelationDiagnosedAndTotalSpend <- function(db){
+getCorDiagnosedCanDiabDemenHyperAndTotalSpend <- function(db){
   
   prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
   
@@ -825,14 +853,183 @@ getCorrelationDiagnosedAndTotalSpend <- function(db){
     geom_bar(stat="identity")
   
   plot(c + theme(axis.text.y = element_text(angle = 90)) + 
-         geom_text(vjust=-0.5))
+         geom_text(vjust=-0.5)) +
+  ggtitle("Correlation between Disease and Total Prescription Cost
+          (Per Practice)") +
+    labs(x = "Disease Type",
+         y = "Total Prescription Cost (Per Practice)")
+}
+
+# Correlation between Cancer, Diabetes, Dementia and Hypertension
+getCorDiagnosedCanSmokAsthObesAndTotalSpend <- function(db){
+  prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
   
+  # calculate correlations between diseases and total drug spending
+  cancerCor <- getCorrelationIndicatorTotalSpend(db, 
+                                                 'CAN001', 
+                                                 prescriptionCostTotal)
+  
+  smokingCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'SMOK002',
+                                                   prescriptionCostTotal)
+  
+  asthmaCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'AST001',
+                                                   prescriptionCostTotal)
+  
+  obesityCor <- getCorrelationIndicatorTotalSpend(db,
+                                                       'OB001W',
+                                                       prescriptionCostTotal)
+  
+  # Output Correlations
+  df <- data.frame(
+    disease = c("Cancer", "Smoking", 
+                "Ashtma", "Obesity"),
+    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 6),
+                                     round(smokingCor[["statistic"]][["t"]], 6),
+                                     round(asthmaCor[["statistic"]][["t"]], 6),
+                                     round(obesityCor[["statistic"]][["t"]], 6)),
+    diseasePValues = c(cancerCor[["p.value"]],
+                       smokingCor[["p.value"]],
+                       asthmaCor[["p.value"]],
+                       obesityCor[["p.value"]]))
+  
+  c <- ggplot(data=df, aes(x = disease,
+                           y = diseaseTotalSpendCorrelation,
+                           fill = disease,
+                           label = paste(diseaseTotalSpendCorrelation, "%"))) +
+    geom_bar(stat="identity")
+  
+  plot(c + theme(axis.text.y = element_text(angle = 90)) + 
+         geom_text(vjust=-0.5)) +
+    ggtitle("Correlation between Disease and Total Prescription Cost
+          (Per Practice)") +
+    labs(x = "Disease Type",
+         y = "Total Prescription Cost (Per Practice)")
+}
+
+# Correlation between: Cancer, Diabetes, Dementia and Hypertension,
+#                      Smoking, Asthma and Obesity
+getCorAllDiagnosedTotalSpend <- function(db){
+  prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
+  
+  # calculate correlations between diseases and total drug spending
+  cancerCor <- getCorrelationIndicatorTotalSpend(db, 
+                                                 'CAN001', 
+                                                 prescriptionCostTotal)
+  
+  diabetesCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'DM001',
+                                                   prescriptionCostTotal)
+  
+  dementiaCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'DEM001',
+                                                   prescriptionCostTotal)
+  
+  hypertensionCor <- getCorrelationIndicatorTotalSpend(db,
+                                                       'HYP%',
+                                                       prescriptionCostTotal)
+  smokingCor <- getCorrelationIndicatorTotalSpend(db,
+                                                  'SMOK002',
+                                                  prescriptionCostTotal)
+  
+  asthmaCor <- getCorrelationIndicatorTotalSpend(db,
+                                                 'AST001',
+                                                 prescriptionCostTotal)
+  
+  obesityCor <- getCorrelationIndicatorTotalSpend(db,
+                                                  'OB001W',
+                                                  prescriptionCostTotal)
+  
+  # Output Correlations
+  df <- data.frame(
+    disease = c("Cancer", "Diabetes", 
+                "Dementia", "Hypertension", "Smoking", 
+                "Ashtma", "Obesity"),
+    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 2),
+                                     round(diabetesCor[["statistic"]][["t"]], 2),
+                                     round(dementiaCor[["statistic"]][["t"]], 2),
+                                     round(hypertensionCor[["statistic"]][["t"]], 2),
+                                     round(smokingCor[["statistic"]][["t"]], 2),
+                                     round(asthmaCor[["statistic"]][["t"]], 2),
+                                     round(obesityCor[["statistic"]][["t"]], 2)))
+  
+  c <- ggplot(data=df, aes(x = disease,
+                           y = diseaseTotalSpendCorrelation,
+                           fill = disease,
+                           label = paste(diseaseTotalSpendCorrelation, "%"))) +
+    geom_bar(stat="identity")
+  
+  plot(c + theme(axis.text.y = element_text(angle = 90)) + 
+         geom_text(vjust=-0.5)) +
+    ggtitle("Correlation between Disease and Total Prescription Cost
+          (Per Practice)") +
+    labs(x = "Disease Type",
+         y = "Total Prescription Cost (Per Practice)")
   
 }
 
-
-
-
-
+# Correlation between a practice total spend on medication and
+# a disease indicator
+# Inputs (Database connection, Disease indicator (e.g. CAN001),
+# TotalSpendTable (pass result from getGPPrescriptionTotalSpendRegion() ))
+# Outputs: Correlation result
+getCorAllDiagnosedTotalSpendRegion <- function(db){
+  prescriptionCostTotal <- getGPPrescriptionTotalSpendRegion(db)
+  
+  # calculate correlations between diseases and total drug spending
+  cancerCor <- getCorrelationIndicatorTotalSpend(db, 
+                                                 'CAN001', 
+                                                 prescriptionCostTotal)
+  
+  diabetesCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'DM001',
+                                                   prescriptionCostTotal)
+  
+  dementiaCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'DEM001',
+                                                   prescriptionCostTotal)
+  
+  hypertensionCor <- getCorrelationIndicatorTotalSpend(db,
+                                                   'HYP%',
+                                                   prescriptionCostTotal)
+  smokingCor <- getCorrelationIndicatorTotalSpend(db,
+                                                  'SMOK002',
+                                                  prescriptionCostTotal)
+  
+  asthmaCor <- getCorrelationIndicatorTotalSpend(db,
+                                                 'AST001',
+                                                 prescriptionCostTotal)
+  
+  obesityCor <- getCorrelationIndicatorTotalSpend(db,
+                                                  'OB001W',
+                                                  prescriptionCostTotal)
+  
+  # Output Correlations
+  df <- data.frame(
+    disease = c("Cancer", "Diabetes", 
+                "Dementia", "Hypertension", "Smoking", 
+                "Ashtma", "Obesity"),
+    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 2),
+                                     round(diabetesCor[["statistic"]][["t"]], 2),
+                                     round(dementiaCor[["statistic"]][["t"]], 2),
+                                     round(hypertensionCor[["statistic"]][["t"]], 2),
+                                     round(smokingCor[["statistic"]][["t"]], 2),
+                                     round(asthmaCor[["statistic"]][["t"]], 2),
+                                     round(obesityCor[["statistic"]][["t"]], 2)))
+  
+  c <- ggplot(data=df, aes(x = disease,
+                           y = diseaseTotalSpendCorrelation,
+                           fill = disease,
+                           label = paste(diseaseTotalSpendCorrelation, "%"))) +
+    geom_bar(stat="identity")
+  
+  plot(c + theme(axis.text.y = element_text(angle = 90)) + 
+         geom_text(vjust=-0.5)) +
+    ggtitle("Correlation between Disease and Total Prescription Cost
+          (Per Region)") +
+    labs(x = "Disease Type",
+         y = "Total Prescription Cost (Per Region)")
+}
 
 

@@ -90,7 +90,7 @@ View(qofAchievementCAN001)
 qofAchievementW00005 <- getGPQofAchievementTable(db, practiceID, 10)
 
 # Get complete table from a PostGreSQL database with set limit on rows
-gettabletest <- getTable(db, 'qof_achievement', 10)
+gettabletest <- getTable(db, 'bnf', 10)
 View(gettabletest)
 gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
 View(gettabletest)
@@ -215,7 +215,7 @@ tesfewfe2 <- getAllPracticeActCostSum(db)
 View(tesfewfe2)
 summary(tesfewfe2)
 
-testcorcan <- getCorrelationDiagnosedAndTotalSpend(db)
+testcorcan <- getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
 
 
 
