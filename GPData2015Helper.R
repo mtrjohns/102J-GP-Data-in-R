@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# gp_up_to_2015 Input Validation Helper Script
+# gp_practice_data PostgreSQL Database Helper Script
 #
 # author: Michael Johns
 #
@@ -158,7 +158,6 @@ gpQofIndicatorTableTidy <- function(db){
   
   return(qof_indicator)
 }
-
 
 #------------------------------------------------------------------------------
 # Get database tables with their data for interrogation
@@ -343,6 +342,11 @@ getPracticeAmountOfPatients <- function(db, practiceID){
     return(as.numeric(totalPatients))
 }
 
+# Total number of patients in all practice
+# using CAN001 automatically to ignore subsets of patients
+# Inputs: (Database connection)
+# Outputs: total amount of registered patients for all practices as a table
+# note: CAN001 is used, as CAN001 is present in every practice
 getPracticeAmountOfPatientsAll <- function(db){
   totalPatientsAllPractices <- dbGetQuery(db,qq(
     'select field4, orgcode
@@ -353,6 +357,9 @@ getPracticeAmountOfPatientsAll <- function(db){
 }
 
 #------------------------------------------------------------------------------
+# Get diagnosed indicator rate for all practices
+# Inputs: (Database Connection)
+# Outputs: A table with all practices diagnosis rates
 getPercentWithIndicator <- function(db, indicator){
   dbGetQuery(db, qq(
   'select ratio, orgcode
@@ -360,16 +367,13 @@ getPercentWithIndicator <- function(db, indicator){
     where indicator like \'@{indicator}\';'))
 }
 
-getPercentageofPatientsWithIndicatorRegion <- function(db, indicator){
-  dbGetQuery(db, qq(
-    'select ratio, orgcode
-    from  qof_achievement
-    where indicator like \'CAN001\';'))
-}
-
 #------------------------------------------------------------------------------
 # Health Condition Percentage of patient functions
 #------------------------------------------------------------------------------
+
+# Get diagnosed cancer rate percentage for all practices
+# Inputs: (Database Connection)
+# Outputs: A table with all practices (excluding 'WAL')
 getdiagnosedCancerPercentage <- function(db){
   diagnosedCancerPercentage <- getPercentWithIndicator(db, 'CAN001') %>% 
     filter(!grepl('WAL', orgcode))
@@ -378,6 +382,9 @@ getdiagnosedCancerPercentage <- function(db){
     return(diagnosedCancerPercentage)
 }
 
+# Get diagnosed Dementia rate percentage for all practices
+# Inputs: (Database Connection)
+# Outputs: A table with all practices (excluding 'WAL')
 getDiagnosedDementiaPercentage <- function(db){
   diagnosedDementiaPercentage <- getPercentWithIndicator(db, 'DM001') %>% 
     filter(!grepl('WAL', orgcode))
@@ -387,7 +394,7 @@ getDiagnosedDementiaPercentage <- function(db){
 }
 
 #------------------------------------------------------------------------------
-# Get percentage in region functions
+# GP Database Queries
 #------------------------------------------------------------------------------
 
 # return mean cancer rate for a region
@@ -411,7 +418,7 @@ getRegionDiagnosedCancerMean <- function(db, filteredHealthBoard){
   DiagnosedCancerPatients <- getdiagnosedCancerPercentage(db) %>% 
     select(cancerrate = ratio, practiceid = orgcode)
   
-  # join tables together to associate orgcode and practice code to cancerrate
+  # join tables together to associate orgcode and practice code to cancer rate
   result <- Region %>% 
     left_join(DiagnosedCancerPatients, by = 'practiceid') %>%
     summarise(regionDiagnosedCancerRate = 
@@ -422,7 +429,9 @@ getRegionDiagnosedCancerMean <- function(db, filteredHealthBoard){
   return(result)
 }
 
-# get current practice's region(hb) mean cancer rate
+# get current practice region's (by healthboard) mean cancer rate
+# Inputs: (Database Connection, PracticeID)
+# Outputs: Selected regions mean cancer diagnosis rate, as a field
 getPracticeRegionDiagnosedCancerMean <- function(db, practiceID){
   #case_when(result <- healthBoard == '7A1' ~ 
    #           getRegionDiagnosedCancerMean(db, getbetsiCadwaladrHB7A1(db)),
@@ -476,11 +485,9 @@ getPracticeRegionDiagnosedCancerMean <- function(db, practiceID){
     return(result)
 }
 
-
-#------------------------------------------------------------------------------
-# mixed functions needing sorting
-#------------------------------------------------------------------------------
 # get table single column
+# Inputs: (Database Connection, Table, Column)
+# Outputs: Selected column
 getColumn <- function(db, table, column){
   column <- dbGetQuery(db, qq(
     'select @{column}
@@ -489,7 +496,9 @@ getColumn <- function(db, table, column){
   return(column)
 }
 
-# get qof_indicator field from specific practice
+# get a single qof_indicator field from specific practice
+# Inputs: (Database Connection, PracticeID, indicator, column)
+# Outputs: Selected field as a field
 getGPQofAchievementField <- function(db, practiceID, indicator, column){
   QofAchievementField <- dbGetQuery(db, qq(
     'select @{column}
@@ -500,7 +509,10 @@ getGPQofAchievementField <- function(db, practiceID, indicator, column){
     return(QofAchievementField)
 }
 
-# get qof_indicator field from specific practice as a numeric return type
+# get a single qof_indicator field from specific practice
+# as a numeric return type
+# Inputs: (Database Connection, PracticeID, indicator, column)
+# Outputs: Selected field as a numeric
 getGPQofAchievementFieldAsNumeric <- function(db, practiceID, indicator, column)
   {
   QofAchievementFieldAsNumeric <- getGPQofAchievementField(db,
@@ -511,6 +523,9 @@ getGPQofAchievementFieldAsNumeric <- function(db, practiceID, indicator, column)
   return(as.numeric(QofAchievementFieldAsNumeric))
 }
 
+# Total cancer patients diagnosed in the Practice
+# Inputs: (Database Connection, PracticeID)
+# Outputs: Numeric Cancer patients diagnosed in the Practice
 getPracticePercentageOfPatientsWithCancer <- function(db, practiceID){
   ratioOfPatientsWithCancer <- getGPQofAchievementField(db, practiceID, 
                                                       'CAN001', 'ratio')
@@ -521,6 +536,9 @@ getPracticePercentageOfPatientsWithCancer <- function(db, practiceID){
   return(PercentageOfPatientsWithCancer)
 }
 
+# Total cancer patients diagnosed in Wales as a whole
+# Inputs: (Database Connection)
+# Outputs: Numeric Cancer patients diagnosed in Wales
 getPercentageOfPatientsWithCancerInWales <- function(db){
   ratioOfPatientsWithCancerInWales <- getGPQofAchievementField(db, 'WAL', 
                                                              'CAN001', 'ratio')
@@ -607,8 +625,6 @@ getSinglePracticeGPdataUpTo2015 <- function(db, practiceID){
   return(GPData2015)
 }
 
-
-
 # Get top 5 drugs prescribed by a single practice (transformed)
 # Inputs: (Database Connection, practiceID)
 # Outputs: table: top 5 drugs prescribed by a single practice
@@ -646,7 +662,11 @@ getTopFiveDrugSpendSinglePractice <- function(db, practiceID){
 # Actual cost of prescriptions
 #---------------------------------------------------------
 
+# Get total prescription spending, summed by practice
+# Inputs: (Database Connection)
+# Outputs: A table containing practiceid and total cost summed by practice
 getGPPrescriptionTotalSpend <- function(db){
+  
   cat("Obtaining all practices spending... Please wait...")
   
   # get actcost and practiceid from gp data
@@ -655,15 +675,25 @@ getGPPrescriptionTotalSpend <- function(db){
       from gp_data_up_to_2015;')) %>%
     
     # rename columns to a more user friendly output
-    select(practiceid = practiceid, healthboard = hb, prescriptionCostTotal = actcost) %>%
+    select(practiceid = practiceid, 
+           healthboard = hb, 
+           prescriptionCostTotal = actcost) %>%
+    
     group_by(practiceid) %>%
-    summarise(practiceid, healthboard, prescriptionCostTotal=round(sum(prescriptionCostTotal),2)) %>%
+    
+    summarise(practiceid, 
+              healthboard, 
+              prescriptionCostTotal=round(sum(prescriptionCostTotal),2)) %>%
     distinct()
   
   #View(GPPrescriptionCost)
   return(GPPrescriptionCost)
 }
 
+# Get total prescription spending, summed by region
+# Inputs: (Database Connection)
+# Outputs: A table containing practiceid, healthboard and
+#          total cost summed by region
 getGPPrescriptionTotalSpendRegion <- function(db){
   cat("Obtaining all practices spending... Please wait...")
   
@@ -684,14 +714,17 @@ getGPPrescriptionTotalSpendRegion <- function(db){
   return(GPPrescriptionCostRegion)
 }
 
-getGPTotalPatients <- function(db){
-  # get patient count from qof_indicator
-  GPTotalPatientCount <- getPracticeAmountOfPatientsAll(db)
-  #View(GPTotalPatientCount)
-  return(GPTotalPatientCount)
-}
+#getGPTotalPatients <- function(db){--------------------------------------78967
+#  # get patient count from qof_indicator
+#  GPTotalPatientCount <- getPracticeAmountOfPatientsAll(db)
+#  #View(GPTotalPatientCount)
+#  return(GPTotalPatientCount)
+#}
 
-
+# Get total spend and total patients joined into a single table
+# Inputs: (Database Connection)
+# Ouputs: Table containing total spend per practice, practiceid and
+#         total registered patients as a practice
 getAllPracticeActCostSum <- function(db){
   
   cat("Obtaining all practices spending... Please wait...")
@@ -725,6 +758,7 @@ getAllPracticeActCostSum <- function(db){
 
 # Complete table for a single practice
 # Inputs: (Database connection, table name, Practice ID(e.g. W#####))
+# Outputs: Bar chart to Plots window
 barCancerRateComparisonPracticeRegionWales <- function(db, practiceID){
 
   # get current Practice's region code(hb)
@@ -732,25 +766,27 @@ barCancerRateComparisonPracticeRegionWales <- function(db, practiceID){
   
   # get a percentage of patients in Wales diagnosed with cancer
   # from qof_achievement table
-  CancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
+  cancerPatientPercentageInWales <- getPercentageOfPatientsWithCancerInWales(db)
   
   # get percentage of patients in a single practice that have cancer
-  PracticeCancerPercentage <- getPracticePercentageOfPatientsWithCancer(db,
+  practiceCancerPercentage <- getPracticePercentageOfPatientsWithCancer(db,
                                                                     practiceID)
   
-  df <- data.frame( CancerDiagnosisType = c(practiceID, "Region", "Wales"),
-                                PatientsDiagnosedWithCancer = 
-                                    c(as.numeric(PracticeCancerPercentage),
-                                    as.numeric(regionMeanCancerRate),
-                                    as.numeric(CancerPatientPercentageInWales)))
+  df <- data.frame( cancerDiagnosisType = 
+                      c(practiceID, "Region", "Wales"),
+                        patientsDiagnosedWithCancer = 
+                              c(as.numeric(practiceCancerPercentage),
+                                as.numeric(regionMeanCancerRate),
+                                as.numeric(cancerPatientPercentageInWales)))
   
   # ensure order is kept for output to display practice, region then Wales
-  df$CancerDiagnosisType <- factor(df$CancerDiagnosisType, levels = df$CancerDiagnosisType)
+  df$cancerDiagnosisType <- factor(df$cancerDiagnosisType, 
+                                   levels = df$cancerDiagnosisType)
   
-  b <- ggplot(data=df, aes(x = CancerDiagnosisType,
-                           y = PatientsDiagnosedWithCancer,
-                           fill = CancerDiagnosisType,
-                           label = paste(PatientsDiagnosedWithCancer, "%"))) +
+  b <- ggplot(data=df, aes(x = cancerDiagnosisType,
+                           y = patientsDiagnosedWithCancer,
+                           fill = cancerDiagnosisType,
+                           label = paste(patientsDiagnosedWithCancer, "%"))) +
     geom_bar(stat="identity") +
   ggtitle("Cancer Rate by Practice, Region for Practice and Wales") +
     labs(x = "Registered Patients (Per Practice)",
@@ -761,11 +797,14 @@ barCancerRateComparisonPracticeRegionWales <- function(db, practiceID){
 }
 
 
-# Scatter plot showing Per Patient Drug Spend To Total Registered Patients
-# In Each Practice
+# Scatter plot showing per patient drug spend to total registered patients
+# in each practice, coloured by region
+# Inputs: (Database Connection)
+# Outputs: Scatter plot to Plots window
 scatterPlotPerPatientSpend <- function(db){
   
-  mycolors = c("#999999", healthboard="#E69F00", "#56B4E9", "#009E73", "#F0E442",
+  mycolors = c("#999999", 
+               healthboard = "#E69F00", "#56B4E9", "#009E73", "#F0E442",
                "#0072B2", "#D55E00", "#cc79a7")
   
   PerPatientSpending <- getAllPracticeActCostSum(db)
@@ -775,7 +814,8 @@ scatterPlotPerPatientSpend <- function(db){
   geom_point() +
     theme_bw() +
     scale_color_manual(values=mycolors) +
-  ggtitle("Per Patient Drug Spend To Total Registered Patients In Each Practice") +
+  ggtitle("Per Patient Drug Spend To 
+          Total Registered Patients In Each Practice") +
     labs(x = "Registered Patients (Per Practice)",
          y = "Total Prescription Cost (Per Patient)")
   
@@ -783,8 +823,7 @@ scatterPlotPerPatientSpend <- function(db){
 }
 
 #------------------------------------------------------------------------------
-# Correlation of medication spending depending on disease rate
-# at a practice level
+# Correlation of medication spending depending on disease rate functions
 #------------------------------------------------------------------------------
 
 # Correlation between a practice total spend on medication and
@@ -811,7 +850,10 @@ getCorrelationIndicatorTotalSpend <- function(db, indicator, totalSpendTable){
   
 }
 
-# Correlation between Cancer, Diabetes, Dementia and Hypertension
+# Correlation between each Practice total spend on medication and
+# disease indicators
+# Inputs (Database connection)
+# Outputs: Correlation between: Cancer, Diabetes, Dementia and Hypertension
 getCorDiagnosedCanDiabDemenHyperAndTotalSpend <- function(db){
   
   prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
@@ -837,14 +879,11 @@ getCorDiagnosedCanDiabDemenHyperAndTotalSpend <- function(db){
   df <- data.frame(
     disease = c("Cancer", "Diabetes", 
                                "Dementia", "Hypertension"),
-    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 6),
-                                round(diabetesCor[["statistic"]][["t"]], 6),
-                                round(dementiaCor[["statistic"]][["t"]], 6),
-                                round(hypertensionCor[["statistic"]][["t"]], 6)),
-    diseasePValues = c(cancerCor[["p.value"]],
-                       diabetesCor[["p.value"]],
-                       dementiaCor[["p.value"]],
-                       hypertensionCor[["p.value"]]))
+    diseaseTotalSpendCorrelation = 
+      c(round(cancerCor[["statistic"]][["t"]], 6),
+        round(diabetesCor[["statistic"]][["t"]], 6),
+        round(dementiaCor[["statistic"]][["t"]], 6),
+        round(hypertensionCor[["statistic"]][["t"]], 6) ))
   
   c <- ggplot(data=df, aes(x = disease,
                            y = diseaseTotalSpendCorrelation,
@@ -860,7 +899,10 @@ getCorDiagnosedCanDiabDemenHyperAndTotalSpend <- function(db){
          y = "Total Prescription Cost (Per Practice)")
 }
 
-# Correlation between Cancer, Diabetes, Dementia and Hypertension
+# Correlation between each Practice total spend on medication and
+# disease indicators
+# Inputs (Database connection)
+# Outputs: Correlation between: Cancer, Smoking, Asthma and Obesity
 getCorDiagnosedCanSmokAsthObesAndTotalSpend <- function(db){
   prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
   
@@ -885,14 +927,11 @@ getCorDiagnosedCanSmokAsthObesAndTotalSpend <- function(db){
   df <- data.frame(
     disease = c("Cancer", "Smoking", 
                 "Ashtma", "Obesity"),
-    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 6),
-                                     round(smokingCor[["statistic"]][["t"]], 6),
-                                     round(asthmaCor[["statistic"]][["t"]], 6),
-                                     round(obesityCor[["statistic"]][["t"]], 6)),
-    diseasePValues = c(cancerCor[["p.value"]],
-                       smokingCor[["p.value"]],
-                       asthmaCor[["p.value"]],
-                       obesityCor[["p.value"]]))
+    diseaseTotalSpendCorrelation = 
+      c(round(cancerCor[["statistic"]][["t"]], 6),
+        round(smokingCor[["statistic"]][["t"]], 6),
+        round(asthmaCor[["statistic"]][["t"]], 6),
+        round(obesityCor[["statistic"]][["t"]], 6) ))
   
   c <- ggplot(data=df, aes(x = disease,
                            y = diseaseTotalSpendCorrelation,
@@ -908,7 +947,10 @@ getCorDiagnosedCanSmokAsthObesAndTotalSpend <- function(db){
          y = "Total Prescription Cost (Per Practice)")
 }
 
-# Correlation between: Cancer, Diabetes, Dementia and Hypertension,
+# Correlation between each Practice total spend on medication and
+# disease indicators
+# Inputs (Database connection)
+# Outputs: Correlation between: Cancer, Diabetes, Dementia, Hypertension,
 #                      Smoking, Asthma and Obesity
 getCorAllDiagnosedTotalSpend <- function(db){
   prescriptionCostTotal <- getGPPrescriptionTotalSpend(db)
@@ -946,13 +988,14 @@ getCorAllDiagnosedTotalSpend <- function(db){
     disease = c("Cancer", "Diabetes", 
                 "Dementia", "Hypertension", "Smoking", 
                 "Ashtma", "Obesity"),
-    diseaseTotalSpendCorrelation = c(round(cancerCor[["statistic"]][["t"]], 2),
-                                     round(diabetesCor[["statistic"]][["t"]], 2),
-                                     round(dementiaCor[["statistic"]][["t"]], 2),
-                                     round(hypertensionCor[["statistic"]][["t"]], 2),
-                                     round(smokingCor[["statistic"]][["t"]], 2),
-                                     round(asthmaCor[["statistic"]][["t"]], 2),
-                                     round(obesityCor[["statistic"]][["t"]], 2)))
+    diseaseTotalSpendCorrelation = 
+      c(round(cancerCor[["statistic"]][["t"]], 2),
+        round(diabetesCor[["statistic"]][["t"]], 2),
+        round(dementiaCor[["statistic"]][["t"]], 2),
+        round(hypertensionCor[["statistic"]][["t"]], 2),
+        round(smokingCor[["statistic"]][["t"]], 2),
+        round(asthmaCor[["statistic"]][["t"]], 2),
+        round(obesityCor[["statistic"]][["t"]], 2)))
   
   c <- ggplot(data=df, aes(x = disease,
                            y = diseaseTotalSpendCorrelation,
@@ -969,11 +1012,11 @@ getCorAllDiagnosedTotalSpend <- function(db){
   
 }
 
-# Correlation between a practice total spend on medication and
-# a disease indicator
-# Inputs (Database connection, Disease indicator (e.g. CAN001),
-# TotalSpendTable (pass result from getGPPrescriptionTotalSpendRegion() ))
-# Outputs: Correlation result
+# Correlation between each Regions total spend on medication and
+# disease indicators
+# Inputs (Database connection)
+# Outputs: Correlation between: Cancer, Diabetes, Dementia, Hypertension,
+#                      Smoking, Asthma and Obesity
 getCorAllDiagnosedTotalSpendRegion <- function(db){
   prescriptionCostTotal <- getGPPrescriptionTotalSpendRegion(db)
   
