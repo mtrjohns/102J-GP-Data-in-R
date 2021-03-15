@@ -122,8 +122,8 @@ CancerPatientPercentageAsNumeric <- getGPQofAchievementFieldAsNumeric(db,
 print(CancerPatientPercentageAsNumeric)
 
 # check total amount of patients in a practice
-W00005PatientTotal <- getPracticeAmountOfPatients(db, 'W00005')
-print(W00005PatientTotal)
+patientTotalTest <- getPracticeAmountOfPatients(db, 'W00005')
+print(patientTotalTest)
 
 # Get single practice full table from gp_data_up_to_2015
 singlePracticeTest <- getSinglePracticeGPdataUpTo2015(db, practiceID)

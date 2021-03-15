@@ -53,35 +53,45 @@ db <- connectDB(database_driver,
 #------------------------------------------------------------------------------
 
 # User input line to populate PracticeID
+# Input entry in the console window
 practiceID <- userPracticeIDInput()
 
 # Get top 5 prescribed drugs for a specific practice
 # Note: Requires populated practiceID
-topFivePrescribedDrugsTest <- getTopFiveDrugSpendSinglePractice(db, practiceID)
+topFivePrescribedDrugs <- getTopFiveDrugSpendSinglePractice(db, practiceID)
+
+#------------------------------------------------------------------------------
+# Comparison and Correlation Plots
+#
+# All below functions run independantly of each other
+#
+# Note: As these are live updates, each executed function can take a while
+#       to populate details (Approx 1-2 minutes)
+#------------------------------------------------------------------------------
 
 # Show Comparison graph of practice, practice's region(by health board) 
 # and wales cancer diagnosis rates
-barCancerRateComparisonPracticeRegionWales(db, practiceID)
+barCancerRate <- barCancerRateComparisonPracticeRegionWales(db, practiceID)
 
 # Visualisation of spend on medication per patient by practice across Wales
-scatterPlotPerPatientSpend(db)
+# Colour coded by health board
+scatterPerPatientSpend <- scatterPlotPerPatientSpend(db)
 
 # Correlation between each Practice total spend on medication and diseases:
 #   Cancer, Diabetes, Dementia and Hypertension
-getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
+correlationCanDiabDemenHyp <- getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
 
 # Correlation between each Practice total spend on medication and diseases:
 #   Cancer, Smoking, Asthma and Obesity
-getCorDiagnosedCanSmokAsthObesAndTotalSpend(db)
+correlationCanSmokAsthObesgetCor <- DiagnosedCanSmokAsthObesAndTotalSpend(db)
 
 # Correlation between each Practice total spend on medication
-# Correlation between: Cancer, Diabetes, Dementia, Hypertension Smoking, 
-#                      Asthma and Obesity
-getCorAllDiagnosedTotalSpend(db)
+# Cancer, Diabetes, Dementia, Hypertension Smoking, Asthma and Obesity
+correlationAll <- getCorAllDiagnosedTotalSpend(db)
 
 # Correlation between each Region's total spend on medication and diseases:
 #   Cancer, Diabetes, Dementia, Hypertension Smoking, Asthma and Obesity
-getCorAllDiagnosedTotalSpendRegion(db)
+correlationAllRegion <- getCorAllDiagnosedTotalSpendRegion(db)
 
 #------------------------------------------------------------------------------
 # Disconnect database and driver

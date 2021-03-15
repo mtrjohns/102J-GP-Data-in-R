@@ -22,9 +22,10 @@ practiceIdValidation <- function(gpPracticeID){
   if(grepl('^W[0-9]{5}$', gpPracticeID)){
     isValid <- TRUE
   }else{
-    cat("Validation check failed. ")
+    cat("Please input a valid practice ID. For Example, 
+         (Upper case character, 5 integers, W00007)")
   }
-
+  
   return(isValid)
 }
 
@@ -32,20 +33,22 @@ practiceIdValidation <- function(gpPracticeID){
 userPracticeIDInput <- function(){
   isValid = FALSE
   
-  # read user input from console
-  practiceID <- readline(prompt="Enter Practice ID (W#####): ")
-  
-  # validate console input matches format W#####
-  isValid <- practiceIdValidation(practiceID)
-  
-  if(isValid){
-    cat("The GP Practice Id has been set to: ", practiceID)
-    return(practiceID)
-  }
-  else
-  {
-    cat("The GP Practice ID '", practiceID,
-        "' is not valid, Please try again (example ID: W00001).", sep='')
+  while(isValid == FALSE){
+    # read user input from console
+    practiceID <- readline(prompt="Enter Practice ID (W#####): ")
+    
+    # validate console input matches format W#####
+    isValid <- practiceIdValidation(practiceID)
+    
+    if(isValid){
+      cat("The GP Practice Id has been set to: ", practiceID)
+      return(practiceID)
+    }
+    else
+    {
+      cat("The GP Practice ID '", practiceID,
+          "' is not valid, Please try again (example ID: W00001).", sep='')
+    }
   }
 }
 
