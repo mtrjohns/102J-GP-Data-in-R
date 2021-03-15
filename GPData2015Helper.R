@@ -6,6 +6,7 @@
 # about: This script allows the user to enter a GP Practice ID to console
 #        and validates data matches the expected format (W#####)
 #       Among varying functions that work with the gp_data_practice database
+#
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 # User Input GP Selection and Validation

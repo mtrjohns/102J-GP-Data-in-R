@@ -1,7 +1,9 @@
 #------------------------------------------------------------------------------
 # Standalone Test script, mainly used to interrogate the data
-# during development
+# during development and show examples of various functions
 # Author: Michael Johns
+#
+# Next Iteration Planned: Automatic testing
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 # Install and Load Library Packages (uncomment to install)
@@ -90,7 +92,7 @@ View(qofAchievementCAN001)
 qofAchievementW00005 <- getGPQofAchievementTable(db, practiceID, 10)
 
 # Get complete table from a PostGreSQL database with set limit on rows
-gettabletest <- getTable(db, 'bnf', 10)
+gettabletest <- getTable(db, 'qof_achievement', 10)
 View(gettabletest)
 gettabletest <- getTable(db, 'gp_data_up_to_2015', 10)
 View(gettabletest)
@@ -103,15 +105,16 @@ Locality <- getColumn(db, 'gp_data_up_to_2015', 'actcost')
 Locality
 summary(Locality)
 
-# get specific table from gp_practice_data database, with limit on rows returned
+# get specific table from gp_practice_data database, with limit on number of 
+# rows returned
 getSummaryTableTest <- getGPDataUpTo2015Table(db, 100) %>% summary()
-getSummaryTableTest
 
 # get a single field from qof_achievement table
 CancerPatientPercentage <- getGPQofAchievementField(db, practiceID, 
                                                     'CAN001', 'ratio')
 print(CancerPatientPercentage)
 
+# get a single field from qof_achievement table as a numeric
 CancerPatientPercentageAsNumeric <- getGPQofAchievementFieldAsNumeric(db,
                                                     practiceID, 
                                                     'CAN001',
@@ -119,7 +122,7 @@ CancerPatientPercentageAsNumeric <- getGPQofAchievementFieldAsNumeric(db,
 print(CancerPatientPercentageAsNumeric)
 
 # check total amount of patients in a practice
-W00005PatientTotal <- GetPracticeAmountOfPatients(db, 'W00005')
+W00005PatientTotal <- getPracticeAmountOfPatients(db, 'W00005')
 print(W00005PatientTotal)
 
 # Get single practice full table from gp_data_up_to_2015
@@ -139,8 +142,9 @@ currentPracticeRegionCode <- getGPPracticeRegionCode(db, practiceID)
 print(currentPracticeRegionCode)
 
 # get current Practice's region code(hb)
-currentPracticeRegionMeanCancerRate <- getPracticeRegionDiagnosedCancerMean(db, practiceID)
-print(mean231$regionDiagnosedCancerRate[1])
+currentPracticeRegionMeanCancerRate <- getPracticeRegionDiagnosedCancerMean(db, 
+                                                                    practiceID)
+print(currentPracticeRegionMeanCancerRate$regionDiagnosedCancerRate[1])
 
 # get a percentage of patients in Wales diagnosed with cancer
 # from qof_achievement table
@@ -149,11 +153,12 @@ print(CancerPatientPercentageInWales)
 
 # get percentage of patients in a single practice that have cancer
 PracticeCancerPercentageTest <- getPracticePercentageOfPatientsWithCancer(db,
-                                                                          practiceID)
+                                                                    practiceID)
 print(PracticeCancerPercentageTest)
 
-tester4 <- getRegionDiagnosedCancerMean(db, getHywelDdaHB7A2(db))
-print(tester4)
+regionDiagnosedCancerMeanTest <- getRegionDiagnosedCancerMean(db, 
+                                                          getHywelDdaHB7A2(db))
+print(regionDiagnosedCancerMeanTest)
 
 # Show Comparison graph of practice, practice's region(by health board) 
 # and wales cancer diagnosis rates
@@ -165,25 +170,31 @@ View(betsiCadwaladrHB7A1Test)
 summary(betsiCadwaladrHB7A1Test)
 
 # return diagnoed cancer patient percentage
-DiagnosedCancerPercentage <- getPercentWithIndicator(db, 'CAN001') %>% 
+diagnosedCancerPercentage <- getPercentWithIndicator(db, 'CAN001') %>% 
                                     filter(!grepl('WAL', orgcode))
-View(DiagnosedCancerPercentageFull)
+View(diagnosedCancerPercentage)
 
 # return diagnosed dementia patient percentage
-DiagnosedDementiaPercentage <- getPercentWithIndicator(db, 'DM001') %>% 
+diagnosedDementiaPercentage <- getPercentWithIndicator(db, 'DM001') %>% 
   filter(!grepl('WAL', orgcode))
-View(DiagnosedDementiaPercentage)
+View(diagnosedDementiaPercentage)
 
 
-
+# Test Diagnosed cancer patients for a single healthboard
 hywelDdaHB7A2Test <- getHywelDdaHB7A2(db)
-diagnosedCancerPatients <- getdiagnosedCancerPercentage(db) %>% select(cancerrate = ratio, practiceid = orgcode)
-test2 <- hywelDdaHB7A2Test %>% left_join(diagnosedCancerPatients, by = 'practiceid') #%>% summarise(mean(cancerrate))
-summary(test2)
+diagnosedCancerPatientsTest <- getdiagnosedCancerPercentage(db) %>% 
+  select(cancerrate = ratio, practiceid = orgcode)
+View(diagnosedCancerPatientsTest)
 
-test22 <- test2 %>% summarise(mean(cancerrate, na.rm = TRUE))
-View(test22)
-summary(test22)
+diagnosedCancerPatientsTest2 <- hywelDdaHB7A2Test %>% 
+  left_join(diagnosedCancerPatientsTest, by = 'practiceid')
+View(diagnosedCancerPatientsTest2)
+summary(diagnosedCancerPatientsTest2)
+
+diagnosedCancerPatientsTest3 <- diagnosedCancerPatientsTest2 %>% 
+  summarise(mean(cancerrate, na.rm = TRUE))
+View(diagnosedCancerPatientsTest3)
+summary(diagnosedCancerPatientsTest3)
 
 
 ratioACH <- QofAchievementRatio <- dbGetQuery(db, qq(
@@ -196,26 +207,20 @@ View(ratioACH)
 summary(ratioACH)
 summedratio <- ratioACH %>% summarise(mean(cancerrate))
 print(summedratio)
-#------------------------------------------------------------------------------
-#
-#------------------------------------------------------------------------------
-test2 <- lhb7A1 %>% left_join(ratioACH, by = 'practiceid')
-View(test2)
 
 # get gp prescription spend total
 gpSpendTotalTest <- getGPPrescriptionTotalSpend(db)
 View(gpSpendTotalTest)
 summary(gpSpendTotalTest)
 
-
-
 # get prescription total -----
-tesfewfe2 <- getAllPracticeActCostSum(db)
+PresctiptionTotalTest <- getAllPracticeActCostSum(db)
+View(PresctiptionTotalTest)
+summary(PresctiptionTotalTest)
 
-View(tesfewfe2)
-summary(tesfewfe2)
-
-testcorcan <- getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
+# Test correlation result output
+correlationTest <- getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
+View(correlationTest)
 
 
 
