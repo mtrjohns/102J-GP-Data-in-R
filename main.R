@@ -83,7 +83,7 @@ correlationCanDiabDemenHyp <- getCorDiagnosedCanDiabDemenHyperAndTotalSpend(db)
 
 # Correlation between each Practice total spend on medication and diseases:
 #   Cancer, Smoking, Asthma and Obesity
-correlationCanSmokAsthObesgetCor <- DiagnosedCanSmokAsthObesAndTotalSpend(db)
+correlationCanSmokAsthObesgetCor <- getCorDiagnosedCanSmokAsthObesAndTotalSpend(db)
 
 # Correlation between each Practice total spend on medication
 # Cancer, Diabetes, Dementia, Hypertension Smoking, Asthma and Obesity
